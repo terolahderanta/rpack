@@ -164,7 +164,7 @@ prob_clust_mstep <- function(data_ew, mu, k, prior_cl_sizes, prior_prob){
   koord <- data.frame(x = c(rnorm(50, mean = 1.5, sd = 0.8), rnorm(50, mean = 5.5, sd = 0.8), 
                             rnorm(50, mean = 3.0, sd = 0.8), rnorm(50, mean = 4.5, sd = 0.8)),
                       y = c(rnorm(50, mean = 1.0, sd = 0.8), rnorm(50, mean = 1.5, sd = 1.0), 
-                            rnorm(50, mean = 4.5, sd= 1.0), rnorm(50, mean = 4.5, sd = 0.8)),
+                            rnorm(50, mean = 4.5, sd = 1.0), rnorm(50, mean = 4.5, sd = 0.8)),
                       w =  round(runif(200, min = 0.51, max = 10.49)),
                       id = 1:200)
   n <- length(koord$x)
