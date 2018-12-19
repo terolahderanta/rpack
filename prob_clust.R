@@ -1,9 +1,10 @@
 # Packages ----------------------------------------------------------------
+
+
 library(lpSolveAPI)
 library(lpSolve)
 library(mvtnorm)
 c_col = c("blue","red","green","orange","hotpink","cyan","yellowgreen","purple","chocolate","darkgrey","darkred","yellow3","darkgreen","wheat3","magenta","palegreen2","violetred","seagreen2","tomato4","steelblue1","royalblue","seagreen4","orangered","darkblue","khaki3","lavender","deeppink2","coral3","beige","brown4","indianred1","lightgreen","orchid")
-
 
 
 # Functions ---------------------------------------------------------------
@@ -151,7 +152,9 @@ prob_clust_mstep <- function(data_ew, mu, k, prior_cl_sizes, prior_prob){
   
 }
 
+
 # Examples ----------------------------------------------------------------
+
 
 # Simulated data (n = 200)
 {
