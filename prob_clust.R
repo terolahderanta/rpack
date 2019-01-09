@@ -212,7 +212,7 @@ k <- 5
 
 # Function call
 {
-temp <- prob_clust(data = koord[, 1:2], weights = koord$w, k = 5, init_mu = init_mu, 
+temp <- prob_clust(data = koord[, 1:2], weights = koord$w, k = k, init_mu = init_mu, 
                   prior_cl_sizes = cl_size, prior_prob = prob)
 koord$cl <- temp[[1]]
 mu <- temp[[2]]
