@@ -1,5 +1,6 @@
-# Packages ----------------------------------------------------------------
+# Probabilistic clustering algorithm where constraints on cluster sizes are given as a prior distribution. 
 
+# Packages ----------------------------------------------------------------
 
 library(lpSolveAPI)
 library(lpSolve)
