@@ -90,7 +90,7 @@ prob_clust <- function(data, weights, k, init_mu, L, U, lambda){
   max_sim <- 30
   
   # Narrowing the prior interval
-  narr <- max(weights)/2
+  narr <- round(max(weights)/2)
   
   for (iter in 1:max_sim) {
     # Old mu is saved to check for convergence
