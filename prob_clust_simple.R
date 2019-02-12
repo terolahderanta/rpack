@@ -96,13 +96,13 @@ prob_clust <- function(data, weights, k, init_mu, L, U, lambda){
     # Old mu is saved to check for convergence
     old_mu <- mu
     
-    # Clusters in equally weighted data (M-step)
-    temp_mstep <- prob_clust_allocation(data_ew, mu, k, L + narr, U - narr, lambda)
-    clusters_ew <- temp_mstep[[1]]
+    # Clusters in equally weighted data (Allocation-step)
+    temp_allocation <- prob_clust_allocation(data_ew, mu, k, L + narr, U - narr, lambda)
+    clusters_ew <- temp_allocation[[1]]
     clusters_ew <- ifelse(clusters_ew == (k+1), 99, clusters_ew)
-    obj_max <- temp_mstep[[2]]
+    obj_max <- temp_allocation[[2]]
     
-    # Updating cluster centers (E-step)
+    # Updating cluster centers (Parameter-step)
     mu <- prob_clust_parameter(data_ew, clusters_ew, k)
     
     print(paste("Iteration:",iter))
