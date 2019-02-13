@@ -10,10 +10,10 @@
 #' @param init_mu Parameters (locations) that define the k distributions.
 #' @param L The lower limit for cluster sizes.
 #' @param U The upper limit for cluster sizes.
-#' @param lambda FIXME
+#' @param lambda Outgroup-parameter.
 #' @return A list containing cluster allocation, cluster center and the current value of the objective function.
 #' @export prob_clust_simple
-prob_clust_simple <- function(data, weights, k, init_mu, L, U, lambda){
+prob_clust_simple <- function(data, weights, k, init_mu, L, U, lambda = NULL){
 
   print("========== Step 1 ==========")
 
@@ -148,7 +148,7 @@ prob_clust_parameter <- function(data_ew, clusters_ew, k){
   return(mu)
 }
 
-#' Update cluster allocations by maximizing the joint log-likelihood (M-step).
+#' Update cluster allocations by maximizing the joint log-likelihood.
 #'
 #' @param data_ew A matrix or data.frame containing the data, where each object is considered to be equally weighted.
 #' @param mu The parameters (locations) that define the k distributions.
@@ -156,7 +156,7 @@ prob_clust_parameter <- function(data_ew, clusters_ew, k){
 #' @param L The lower limit for cluster sizes.
 #' @param U The upper limit for cluster sizes.
 #' @param lambda FIXME
-#' @return New cluster allocations for each object in data_ew.
+#' @return New cluster allocations for each object in data_ew and the maximum of the objective function.
 prob_clust_allocation <- function(data_ew, mu, k, L, U, lambda){
 
   # Number of objects in data_ew
@@ -165,7 +165,7 @@ prob_clust_allocation <- function(data_ew, mu, k, L, U, lambda){
   # Matrix contains the log-likelihoods of the individual data points
   C <- apply(mu, MARGIN = 1, FUN = mvtnorm::dmvnorm, x = data_ew, sigma = diag(2), log = TRUE)
 
-  # New linear program model object containing, where the number of decision variables is n * k + n
+  # New linear program model object
   lp1 <- lpSolveAPI::make.lp(nrow = 0, ncol = n * k + n)
 
   # Maximizing the joint log-likelihood
@@ -199,12 +199,12 @@ prob_clust_allocation <- function(data_ew, mu, k, L, U, lambda){
   # Solving the optimization problem
   solve(lp1)
 
-  obj_min <- round(lpSolveAPI::get.objective(lp1), digits = 2)
+  obj_max <- round(lpSolveAPI::get.objective(lp1), digits = 2)
 
   # Print the value of the objective function
-  print(paste("Value of the objective function:", obj_min))
+  print(paste("Value of the objective function:", obj_max))
 
-  return(list(apply(matrix(lpSolveAPI::get.variables(lp1)[1:(n * k + n)], ncol = k + 1), 1, which.max), obj_min))
+  return(list(apply(matrix(lpSolveAPI::get.variables(lp1)[1:(n * k + n)], ncol = k + 1), 1, which.max), obj_max))
 
 }
 
