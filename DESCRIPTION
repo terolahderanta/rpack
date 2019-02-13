@@ -1,10 +1,10 @@
-Package: pcluster
+Package: pclustr
 Type: Package
 Title: Probabilistic Clustering
 Version: 0.0.0.9000
 Author: Tero Lähdenperä
 Maintainer: Tero Lähdenperä <tero.lahdenpera@oulu.fi>
-Description: pcluster is a package for probabilistic clustering.
+Description: pclustr is a package for probabilistic clustering.
     Lorem ipsum dolor...
 License: GPL-3
 Encoding: UTF-8
@@ -12,7 +12,12 @@ LazyData: true
 Imports:
     tidyverse,
     assertthat,
-    datastructures
+    datastructures,
+    lpSolveAPI,
+    lpSolve,
+    mvtnorm,
+    pracma
 Suggests:
     testthat,
     roxygen2
+RoxygenNote: 6.1.1

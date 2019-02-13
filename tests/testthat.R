@@ -1,4 +1,4 @@
 library(testthat)
 library(pcluster)
 
-test_check("pcluster")
+test_check("pclustr")
