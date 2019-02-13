@@ -155,7 +155,7 @@ prob_clust_parameter <- function(data_ew, clusters_ew, k){
 #' @param k The number of clusters.
 #' @param L The lower limit for cluster sizes.
 #' @param U The upper limit for cluster sizes.
-#' @param lambda FIXME
+#' @param lambda Outgroup-parameter
 #' @return New cluster allocations for each object in data_ew and the maximum of the objective function.
 prob_clust_allocation <- function(data_ew, mu, k, L, U, lambda){
 
@@ -217,7 +217,7 @@ prob_clust_allocation <- function(data_ew, mu, k, L, U, lambda){
 #' @param k The number of clusters.
 #' @param L A lower limit for cluster sizes.
 #' @param U An upper limit for cluster sizes.
-#' @param lambda FIXME
+#' @param lambda Outgroup-parameter
 #' @return New cluster allocations for each object in data_ew.
 prob_clust_allocation_indiv <- function(data, weights, clusters, mu, k, L, U, lambda){
 
