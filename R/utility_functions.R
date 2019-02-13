@@ -27,28 +27,28 @@ plot_clusters <- function(data, weights, clusters, mu, main){
   k <- length(mu[,1])
 
   # FIXME: Consider plotting with ggplot
-  plot(data, cex = weights / 3,
+  graphics::plot(data, cex = weights / 3,
        pch = 19,
        main = paste(main, " (n = ", n, ")",sep = ""),
        col = c_col[clusters],
        xlim = c(min(data[,1]) - 2, max(data[,1]) + 1),
        ylim = c(min(data[,2]) - 1, max(data[,2]) + 1))
-  points(data[clusters == 99,])
-  points(mu, cex = 2, pch = 4, lwd = 4)
-  legend(min(data[,1]) - 2.5,
-         max(data[,2]) +1,
-         col = c_col[c(1:k, 99)],
-         pch = 19, cex = 0.8,
-         legend = paste("Cluster", c(1:k, 99),
-                        paste("  (", apply(X = t(c(1:k, 99)),
-                                           MARGIN = 2,
-                                           FUN = function(x) {sum(weights[clusters == x])}
-                                           ),
-                              ")",
-                              sep=""
-                              )
-                        )
-         )
+  graphics::points(data[clusters == 99,])
+  graphics::points(mu, cex = 2, pch = 4, lwd = 4)
+  graphics::legend(min(data[,1]) - 2.5,
+                   max(data[,2]) +1,
+                   col = c_col[c(1:k, 99)],
+                   pch = 19, cex = 0.8,
+                   legend = paste("Cluster", c(1:k, 99),
+                                  paste("  (", apply(X = t(c(1:k, 99)),
+                                                     MARGIN = 2,
+                                                     FUN = function(x) {sum(weights[clusters == x])}
+                                  ),
+                                  ")",
+                                  sep=""
+                                  )
+                   )
+  )
 
 }
 
@@ -67,7 +67,7 @@ kmpp <- function(X, k) {
     C[i] <- sample(1:n, 1, prob = pr)
   }
 
-  kmeans(X, X[C, ])
+  stats::kmeans(X, X[C, ])
 }
 
 #' Calculate the mode of vector v

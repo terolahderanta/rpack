@@ -6,10 +6,11 @@
 #'
 #' @param data A matrix or data.frame containing the data.
 #' @param weights A vector of weights for each data point.
-#' @param init_mu Parameters (locations) that define the k distributions.
 #' @param k The number of clusters.
+#' @param init_mu Parameters (locations) that define the k distributions.
 #' @param L The lower limit for cluster sizes.
 #' @param U The upper limit for cluster sizes.
+#' @param lambda FIXME
 #' @return A list containing cluster allocation, cluster center and the current value of the objective function.
 #' @export prob_clust_simple
 prob_clust_simple <- function(data, weights, k, init_mu, L, U, lambda){
@@ -94,10 +95,12 @@ prob_clust_simple <- function(data, weights, k, init_mu, L, U, lambda){
 
 #' Calculate the objective function value, given clusters and mu.
 #'
-#'  @param data A matrix or data.frame containing the data.
-#'  @param clusters Current point allocation to clusters
-#'  @param mu Parameters (locations) that define the k distributions.
-#'  @return The value of the objective function.
+#' @param data A matrix or data.frame containing the data.
+#' @param weights FIXME
+#' @param clusters Current point allocation to clusters
+#' @param mu Parameters (locations) that define the k distributions.
+#' @param lambda FIXME
+#' @return The value of the objective function.
 obj_function <- function(data, weights, clusters, mu, lambda){
 
   n <- length(data[,1])
@@ -107,7 +110,7 @@ obj_function <- function(data, weights, clusters, mu, lambda){
   C <- apply(mu, MARGIN = 1, FUN = mvtnorm::dmvnorm, x = data, sigma = diag(2), log = TRUE)
 
   # Scaling the tuning parameter lambda
-  nu2 <- -(mean(dist(data))/sqrt(k)) ^ 2
+  nu2 <- -(mean(stats::dist(data))/sqrt(k)) ^ 2
 
   # Cluster allocation
   z <- matrix(0, nrow = n, ncol = k)
@@ -152,6 +155,7 @@ prob_clust_parameter <- function(data_ew, clusters_ew, k){
 #' @param k The number of clusters.
 #' @param L The lower limit for cluster sizes.
 #' @param U The upper limit for cluster sizes.
+#' @param lambda FIXME
 #' @return New cluster allocations for each object in data_ew.
 prob_clust_allocation <- function(data_ew, mu, k, L, U, lambda){
 
@@ -171,7 +175,7 @@ prob_clust_allocation <- function(data_ew, mu, k, L, U, lambda){
   lpSolveAPI::set.type(lp1, 1:(n * k + n), "binary")
 
   # Scaling the tuning parameter lambda
-  nu2 <- -(mean(dist(data_ew))/sqrt(k)) ^ 2
+  nu2 <- -(mean(stats::dist(data_ew))/sqrt(k)) ^ 2
 
   # Objective function in the optimization problem
   lpSolveAPI::set.objfn(lp1, c(C, rep(nu2 * lambda, n)))
@@ -207,10 +211,13 @@ prob_clust_allocation <- function(data_ew, mu, k, L, U, lambda){
 #' Updates cluster allocations by individually allocationg points.
 #'
 #' @param data A matrix or data.frame containing the data, where each object is considered to be equally weighted.
+#' @param weights FIXME
+#' @param clusters FIXME
 #' @param mu The parameters (locations) that define the k distributions.
 #' @param k The number of clusters.
 #' @param L A lower limit for cluster sizes.
 #' @param U An upper limit for cluster sizes.
+#' @param lambda FIXME
 #' @return New cluster allocations for each object in data_ew.
 prob_clust_allocation_indiv <- function(data, weights, clusters, mu, k, L, U, lambda){
 
@@ -309,6 +316,7 @@ prob_clust_parameter_weights <- function(data, clusters, weights, k){
 #' @param k The number of clusters.
 #' @param L A lower limit for cluster sizes.
 #' @param U An upper limit for cluster sizes.
+#' @param lambda FIXME
 #' @return New cluster allocations for each object in data_ew
 prob_clust_allocation_weights <- function(data, weights, mu, k, L, U, lambda){
 
@@ -328,7 +336,7 @@ prob_clust_allocation_weights <- function(data, weights, mu, k, L, U, lambda){
   lpSolveAPI::set.type(lp1, 1:(n * k + n), "binary")
 
   # Scaling the tuning parameter lambda
-  nu2 <- -(mean(stat::dist(data))/sqrt(k)) ^ 2
+  nu2 <- -(mean(stats::dist(data))/sqrt(k)) ^ 2
 
   # Objective function in the optimization problem
   lpSolveAPI::set.objfn(lp1, c(C * weights, rep(nu2 * lambda, n)))
