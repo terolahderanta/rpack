@@ -125,7 +125,7 @@ obj_function <- function(data, weights, clusters, mu, lambda){
   Cz = c(C * z)
 
   # Objective function
-  return(sum(Cz * weights) + nu2*lambda*sum(z_out * weights))
+  return(sum(Cz * weights) + ifelse(!is.null(lambda), nu2 * lambda  *sum(z_out * weights), 0))
 }
 
 #' Update the parameters (centers) for each cluster.
@@ -161,18 +161,24 @@ prob_clust_allocation <- function(data_ew, mu, k, L, U, lambda){
 
   # Number of objects in data_ew
   n <- length(data_ew[,1])
+  
+  # Is there an outgroup cluster
+  is_outgroup <- !is.null(lambda)
+  
+  # Number of decision variables
+  n_decision <- ifelse(is_outgroup, n * k + n, n * k)
 
   # Matrix contains the log-likelihoods of the individual data points
   C <- apply(mu, MARGIN = 1, FUN = mvtnorm::dmvnorm, x = data_ew, sigma = diag(2), log = TRUE)
 
   # New linear program model object
-  lp1 <- lpSolveAPI::make.lp(nrow = 0, ncol = n * k + n)
+  lp1 <- lpSolveAPI::make.lp(nrow = 0, ncol = n_decision)
 
   # Maximizing the joint log-likelihood
   lpSolveAPI::lp.control(lp1, sense = "max")
 
   # Binary integer problem
-  lpSolveAPI::set.type(lp1, 1:(n * k + n), "binary")
+  lpSolveAPI::set.type(lp1, 1:n_decision, "binary")
 
   # Scaling the tuning parameter lambda
   nu2 <- -(mean(stats::dist(data_ew))/sqrt(k)) ^ 2
@@ -182,18 +188,18 @@ prob_clust_allocation <- function(data_ew, mu, k, L, U, lambda){
 
   # Constraint 1: each point is assigned to exactly one cluster
   for (i in 1:n) {
-    lpSolveAPI::add.constraint(lp1, c(as.numeric(rep(1:n == i, k + 1))), "=", 1)
+    lpSolveAPI::add.constraint(lp1, c(as.numeric(rep(1:n == i, ifelse(is_outgroup, k + 1, k)))), "=", 1)
   }
 
   # Constraint 2: each cluster size must be higher than L
   temp <- c(t(matrix(1, ncol = n, nrow = k) * 1:k))
   for (i in 1:k) {
-    lpSolveAPI::add.constraint(lp1, c(as.numeric(temp == i, n), rep(0, n)), ">=", L)
+    lpSolveAPI::add.constraint(lp1, c(as.numeric(temp == i, n), rep(0, ifelse(is_outgroup, n, 0))), ">=", L)
   }
 
   # Constraint 3: each cluster size must be lower than U
   for (i in 1:k) {
-    lpSolveAPI::add.constraint(lp1, c(as.numeric(temp == i, n), rep(0, n)), "<=", U)
+    lpSolveAPI::add.constraint(lp1, c(as.numeric(temp == i, n), rep(0, ifelse(is_outgroup, n, 0))), "<=", U)
   }
 
   # Solving the optimization problem
@@ -204,7 +210,7 @@ prob_clust_allocation <- function(data_ew, mu, k, L, U, lambda){
   # Print the value of the objective function
   print(paste("Value of the objective function:", obj_max))
 
-  return(list(apply(matrix(lpSolveAPI::get.variables(lp1)[1:(n * k + n)], ncol = k + 1), 1, which.max), obj_max))
+  return(list(apply(matrix(lpSolveAPI::get.variables(lp1)[1:n_decision], ncol = ifelse(is_outgroup, k + 1, k)), 1, which.max), obj_max))
 
 }
 
