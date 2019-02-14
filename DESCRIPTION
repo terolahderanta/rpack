@@ -2,8 +2,9 @@ Package: pclustr
 Type: Package
 Title: Probabilistic Clustering
 Version: 0.0.0.9000
-Author: Tero Lähdenperä
-Maintainer: Tero Lähdenperä <tero.lahdenpera@oulu.fi>
+Authors@R: c(
+  person("Tero", "Lähdenperä", email = "tero.lahdenpera@oulu.fi", role = c("aut", "cre"),
+  person("Lauri", "Lovén", email = "lauri.loven@gmail.com", role = c("aut"))
 Description: pclustr is a package for probabilistic clustering.
     Lorem ipsum dolor...
 License: GPL-3
