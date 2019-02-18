@@ -33,7 +33,7 @@ plot_clusters <- function(data, weights, clusters, mu, title = ""){
   cl_sizes <- apply(X = t(1:k), MARGIN = 2, FUN = function(x) {sum(weights[clusters == x])})
 
   # Using ggplot
-  ggplot2::ggplot(data = NULL) +  
+  plot <- ggplot2::ggplot(data = NULL) +  
           
   # Plotting objects
   ggplot2::geom_point(mapping = ggplot2::aes(x = data[, 1], y = data[, 2], size = weights, col = clusters)) +
@@ -56,9 +56,9 @@ plot_clusters <- function(data, weights, clusters, mu, title = ""){
 
   # Plotting cluster centers
   ggplot2::geom_point(mapping = ggplot2::aes(x = mu[, 1], y = mu[, 2]), 
-                      size = 4, col = "black", show.legend = FALSE, shape = 4, stroke = 3)
+                      size = 3, col = "black", show.legend = FALSE, shape = 4, stroke = 3)
           
-
+  return(plot)
 }
 
 #' K-means++ algorithm FIXME: insert ref!
