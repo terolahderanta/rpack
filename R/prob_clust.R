@@ -24,7 +24,7 @@ prob_clust <- function(data, weights, k, init_mu, prior_cl_sizes, prior_prob, la
   data_ew <- apply(data, MARGIN = 2, FUN = rep, times = weights)
 
   # Original id:s for each data point in equally weighted data
-  id_ew = rep(1:n, times = weights)
+  id_ew <- rep(1:n, times = weights)
 
   # Initial clusters
   clusters <- rep(0,n)
