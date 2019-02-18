@@ -9,9 +9,10 @@
 #' @param k The number of clusters.
 #' @param prior_cl_sizes All the possible values for cluster sizes.
 #' @param prior_prob The corresponding probabilities (sum to 1).
-#' @return A list containting the new cluster allocations for each object in data, and the new cluster center locations.
+#' @param lambda Outgroup-parameter.
+#' @return A list containting the new cluster allocations for each object in data, the new cluster center locations and maximum of the objective function.
 #' @export prob_clust
-prob_clust <- function(data, weights, k, init_mu, prior_cl_sizes, prior_prob){
+prob_clust <- function(data, weights, k, init_mu, prior_cl_sizes, prior_prob, lambda = 0){
 
   # Number of objects in data
   n <- length(data[,1])
@@ -36,54 +37,64 @@ prob_clust <- function(data, weights, k, init_mu, prior_cl_sizes, prior_prob){
     # Old mu is saved to check for convergence
     old_mu <- mu
 
-    # Clusters in equally weighted data (M-step)
-    clusters_ew <- prob_clust_mstep(data_ew, mu, k, prior_cl_sizes, prior_prob)
+    # Clusters in equally weighted data (Allocation-step)
+    temp_allocation <- prob_clust_estep(data_ew, mu, k, prior_cl_sizes, prior_prob, lambda)
+    
+    # Clusters in equally weighted data
+    clusters_ew <- temp_allocation[[1]]
+    
+    # Outgroup-clusters (cluster 99)
+    clusters_ew <- ifelse(clusters_ew == (k+1), 99, clusters_ew)
+    
+    # Maximum value of the objective function
+    obj_max <- temp_allocation[[2]]
 
-    # Converting clusters_ew to original data
-    for (i in 1:n) {
-      clusters[i] <- getmode(clusters_ew[id_ew == i])
-    }
-
-    # Updating cluster centers (E-step)
-    mu <- prob_clust_estep(data, weights, clusters, k)
+    # Updating cluster centers (Parameter-step)
+    mu <- prob_clust_mstep(data_ew, clusters_ew, k)
 
     print(paste("Iteration:",iter))
 
     # If nothing is changing, stop
     if(all(old_mu == mu)) break
   }
-  return(list(clusters,mu))
+  
+  # Converting clusters_ew to original data
+  for (i in 1:n) {
+    clusters[i] <- getmode(clusters_ew[id_ew == i])
+  }
+  
+  return(list(clusters, mu, obj_max))
 }
 
 #' Update the parameters (centers) for each cluster.
 #'
-#' @param data A matrix or data.frame containing the data.
-#' @param weights A vector of weights for each data point.
-#' @param clusters A vector of cluster assignments for each data point.
+#' @param data_ew A matrix or data.frame containing the data.
+#' @param clusters_ew A vector of cluster assignments for each data point.
 #' @param k The number of clusters.
 #' @return New cluster centers.
-prob_clust_estep <- function(data, weights, clusters, k){
+prob_clust_mstep <- function(data_ew, clusters_ew, k){
 
   # Matrix for cluster centers
-  mu <- matrix(0,nrow = k, ncol = length(data[1,]))
+  mu <- matrix(0, nrow = k, ncol = length(data[1,]))
 
   # Update mu given
   for (i in 1:k) {
-    mu[i,] <- apply(data[clusters == i,] * weights[clusters == i], 2, FUN=sum) / sum(weights[clusters == i])
+    mu[i,] <- c(mean(data_ew[clusters_ew == i, 1]), mean(data_ew[clusters_ew == i, 2]))
   }
 
   return(mu)
 }
 
-#' Update cluster allocations by maximizing the joint log-likelihood (M-step).
+#' Update cluster allocations by maximizing the joint log-likelihood (Allocation-step).
 #'
 #' @param data_ew A matrix or data.frame containing the data, where each object is considered to be equally weighted.
 #' @param mu Parameters (locations) that define the k distributions.
 #' @param k The number of clusters.
 #' @param prior_cl_sizes All the possible values for cluster sizes.
 #' @param prior_prob Corresponding probabilities (sum to 1).
+#' @param lambda Outgroup-parameter.
 #' @return New cluster allocations for each object in data_ew
-prob_clust_mstep <- function(data_ew, mu, k, prior_cl_sizes, prior_prob){
+prob_clust_estep <- function(data_ew, mu, k, prior_cl_sizes, prior_prob, lambda){
 
   # Number of objects in data_ew
   n <- length(data_ew[,1])
@@ -128,7 +139,12 @@ prob_clust_mstep <- function(data_ew, mu, k, prior_cl_sizes, prior_prob){
 
   # Solving the optimization problem
   solve(lp1)
+  
+  # Maximum of the objective function
+  obj_max <- round(get.objective(lp1), digits = 2)
 
-  return(apply(matrix(lpSolveAPI::get.variables(lp1)[1:(n * k)], ncol = k), 1, which.max))
-
+  # Print the value of the objective function
+  print(paste("Value of the objective function:", obj_max))
+  
+  return(list(apply(matrix(lpSolveAPI::get.variables(lp1)[1:(n * k)], ncol = k), 1, which.max), obj_max))
 }
