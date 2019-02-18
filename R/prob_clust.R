@@ -75,7 +75,7 @@ prob_clust <- function(data, weights, k, init_mu, prior_cl_sizes, prior_prob, la
 prob_clust_mstep <- function(data_ew, clusters_ew, k){
 
   # Matrix for cluster centers
-  mu <- matrix(0, nrow = k, ncol = length(data[1,]))
+  mu <- matrix(0, nrow = k, ncol = length(data_ew[1,]))
 
   # Update mu given
   for (i in 1:k) {
