@@ -141,7 +141,7 @@ prob_clust_estep <- function(data_ew, mu, k, prior_cl_sizes, prior_prob, lambda)
   solve(lp1)
   
   # Maximum of the objective function
-  obj_max <- round(get.objective(lp1), digits = 2)
+  obj_max <- round(lpSolveAPI::get.objective(lp1), digits = 2)
 
   # Print the value of the objective function
   print(paste("Value of the objective function:", obj_max))
