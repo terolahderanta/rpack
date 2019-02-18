@@ -19,36 +19,45 @@ getmode <- function(v) {
 #' @param clusters FIXME
 #' @param mu FIXME
 #' @param main FIXME
-#' # FIXME: Consider plotting with ggplot
-plot_clusters <- function(data, weights, clusters, mu, main){
-  # Plots the clusters
+plot_clusters <- function(data, weights, clusters, mu, title = ""){
+  # Changing mu to data.frame
+  mu <-  data.frame(mu)
+          
+  # The number of clusters
+  k <- length(mu[, 1])
+          
+  # Changing clusters to factors
+  clusters <- as.factor(clusters)
+  
+  # Cluster sizes
+  cl_sizes <- apply(X = t(1:k), MARGIN = 2, FUN = function(x) {sum(weights[clusters == x])})
 
-  n <- length(data[,1])
-  k <- length(mu[,1])
+  # Using ggplot
+  ggplot2::ggplot(data = NULL) +  
+          
+  # Plotting objects
+  ggplot2::geom_point(mapping = ggplot2::aes(x = data[, 1], y = data[, 2], size = weights, col = clusters)) +
+  
+  # Scaling objects sizes 
+  ggplot2::scale_size(range = c(2, 7), guide = FALSE) +
+  
+  # Color theme for objects and legend title
+  ggplot2::scale_color_manual(values = c_col, name = "Cluster sizes:") +    
+          
+  # Point size in legend
+  ggplot2::guides(color = ggplot2::guide_legend(override.aes = list(size=5))) + 
+  
+  # Labels for axis and title
+  ggplot2::labs(x = "x1", y = "x2", title = title) +        
+  
+  # Legend position and removing ticks from axis
+  ggplot2::theme(legend.position = "right", axis.text.x = ggplot2::element_blank(),
+                 axis.text.y = ggplot2::element_blank(), axis.ticks = ggplot2::element_blank()) +        
 
-  # FIXME: Consider plotting with ggplot
-  graphics::plot(data, cex = weights / 3,
-       pch = 19,
-       main = paste(main, " (n = ", n, ")",sep = ""),
-       col = c_col[clusters],
-       xlim = c(min(data[,1]) - 2, max(data[,1]) + 1),
-       ylim = c(min(data[,2]) - 1, max(data[,2]) + 1))
-  graphics::points(data[clusters == 99,])
-  graphics::points(mu, cex = 2, pch = 4, lwd = 4)
-  graphics::legend(min(data[,1]) - 2.5,
-                   max(data[,2]) +1,
-                   col = c_col[c(1:k, 99)],
-                   pch = 19, cex = 0.8,
-                   legend = paste("Cluster", c(1:k, 99),
-                                  paste("  (", apply(X = t(c(1:k, 99)),
-                                                     MARGIN = 2,
-                                                     FUN = function(x) {sum(weights[clusters == x])}
-                                  ),
-                                  ")",
-                                  sep=""
-                                  )
-                   )
-  )
+  # Plotting cluster centers
+  ggplot2::geom_point(mapping = ggplot2::aes(x = mu[, 1], y = mu[, 2]), 
+                      size = 4, col = "black", show.legend = FALSE, shape = 4, stroke = 3)
+          
 
 }
 
