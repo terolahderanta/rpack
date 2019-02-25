@@ -140,7 +140,7 @@ demo_prob_cluster <- function() {
   prob <- stats::dnorm(cl_size, mean = pr_mean, sd = pr_sd)
 
   # Function call
-  temp <- prob_clust(data = test_dat[, 1:2],
+  temp <- prob_clust_prior(data = test_dat[, 1:2],
                      weights = test_dat$w,
                      k = k,
                      init_mu = init_mu,
