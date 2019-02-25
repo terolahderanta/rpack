@@ -11,8 +11,8 @@
 #' @param prior_prob The corresponding probabilities (sum to 1).
 #' @param lambda Outgroup-parameter.
 #' @return A list containting the new cluster allocations for each object in data, the new cluster center locations and maximum of the objective function.
-#' @export prob_clust
-prob_clust <- function(data, weights, k, init_mu, prior_cl_sizes, prior_prob, lambda = 0){
+#' @export 
+prob_clust_prior <- function(data, weights, k, init_mu, prior_cl_sizes, prior_prob, lambda = 0){
 
   # Number of objects in data
   n <- length(data[,1])
