@@ -10,9 +10,10 @@
 #' @param prior_cl_sizes All the possible values for cluster sizes.
 #' @param prior_prob The corresponding probabilities (sum to 1).
 #' @param lambda Outgroup-parameter.
+#' @param divide_objects If TRUE, objects can be divided to multiple clusters.
 #' @return A list containting the new cluster allocations for each object in data, the new cluster center locations and maximum of the objective function.
 #' @export 
-prob_clust_prior <- function(data, weights, k, init_mu, prior_cl_sizes, prior_prob, lambda = 0){
+prob_clust_prior <- function(data, weights, k, init_mu, prior_cl_sizes, prior_prob, lambda = 0, divide_objects = FALSE){
 
   # Number of objects in data
   n <- length(data[,1])
@@ -52,17 +53,22 @@ prob_clust_prior <- function(data, weights, k, init_mu, prior_cl_sizes, prior_pr
     # Updating cluster centers (Parameter-step)
     mu <- prob_clust_mstep(data_ew, clusters_ew, k)
 
+    # Printing the iteration lap
     print(paste("Iteration:",iter))
 
     # If nothing is changing, stop
     if(all(old_mu == mu)) break
   }
   
-  # Converting clusters_ew to original data
-  for (i in 1:n) {
-    clusters[i] <- getmode(clusters_ew[id_ew == i])
+  if(!divide_objects) {
+    # Converting clusters_ew to original data
+    for (i in 1:n) {
+      clusters[i] <- getmode(clusters_ew[id_ew == i])
+    }
+  } else {
+    # Objects can be divided to multiple clusters
+    clusters <- clusters_ew
   }
-  
   return(list(clusters, mu, obj_max))
 }
 
