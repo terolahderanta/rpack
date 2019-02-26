@@ -42,7 +42,7 @@ plot_clusters <- function(data, weights, clusters, mu, title = ""){
   ggplot2::scale_size(range = c(2, 7), guide = FALSE) +
   
   # Color theme for objects and legend title
-  ggplot2::scale_color_manual(values = c_col, name = "Cluster sizes:", labels = cl_sizes) +    
+  ggplot2::scale_color_manual(values = rep(c_col, times = 5), name = "Cluster sizes:", labels = cl_sizes) +    
           
   # Point size in legend
   ggplot2::guides(color = ggplot2::guide_legend(override.aes = list(size=5))) + 
