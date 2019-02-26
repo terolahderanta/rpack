@@ -7,6 +7,7 @@
 #' @param prior_dist Prior distribution for cluster sizes. Possible values are "uniform" and "normal".
 #' @param range Range of the uniform prior distribution as a vector c(lower, upper).
 #' @param sigma Standard deviation of the normal prior.
+#' @param lambda Outgroup-parameter.
 #' @param divide_objects If TRUE, objects can be divided to multiple clusters
 #' @return A list containting the new cluster allocations for each object in data, the new cluster center locations and maximum of the objective function.
 prob_clust <- function(data, weights, k, init_mu = NULL, prior_dist = "uniform", range = NULL, sigma = NULL, lambda = NULL, divide_objects = FALSE){
@@ -29,6 +30,7 @@ prob_clust <- function(data, weights, k, init_mu = NULL, prior_dist = "uniform",
       L <- (pr_mean - pr_width)
       U <- (pr_mean + pr_width)
     } else {
+      # Lower and upper limit given by user
       L <- range[1]
       U <- range[2]
     }
@@ -38,6 +40,7 @@ prob_clust <- function(data, weights, k, init_mu = NULL, prior_dist = "uniform",
 
   } else if(prior_dist == "normal"){
 
+    # Initializing sigma
     if(is.null(sigma)){
       sigma <- max(weights) / 2
     }
