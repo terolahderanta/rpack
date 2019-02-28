@@ -1,7 +1,7 @@
-#' @title Probabilistic Clustering
+#' Probabilistic clustering helper function
 #'
-#' @description Alternating algorithm for maximizing the joint density. Constraints on
-#' cluster sizes are given as a prior distribution.
+#' Alternating function for probabilistic clustering. Constraints on cluster
+#' sizes are given as a prior distribution.
 #'
 #' @param data A matrix or data.frame containing the data.
 #' @param weights A vector of weights for each data point.
@@ -13,7 +13,14 @@
 #' @param divide_objects If TRUE, objects can be divided to multiple clusters.
 #' @return A list containting the new cluster allocations for each object in data, the new cluster center locations and maximum of the objective function.
 #' @keywords internal
-prob_clust_prior <- function(data, weights, k, init_mu, prior_cl_sizes, prior_prob, lambda = 0, divide_objects = FALSE){
+prob_clust_prior <- function(data,
+                             weights,
+                             k,
+                             init_mu,
+                             prior_cl_sizes,
+                             prior_prob,
+                             lambda = 0,
+                             divide_objects = FALSE) {
 
   # Number of objects in data
   n <- length(data[,1])
@@ -102,7 +109,7 @@ prob_clust_mstep <- function(data_ew, clusters_ew, k){
 #' @param lambda Outgroup-parameter.
 #' @return New cluster allocations for each object in data_ew
 #' @keywords internal
-prob_clust_estep <- function(data_ew, mu, k, prior_cl_sizes, prior_prob, lambda){
+prob_clust_estep <- function(data_ew, mu, k, prior_cl_sizes, prior_prob, lambda) {
 
   # Number of objects in data_ew
   n <- length(data_ew[,1])

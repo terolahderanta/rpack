@@ -46,7 +46,9 @@ plot_testdata <- function(dat) {
                  ylim = c(min(dat$y) - 1 ,max(dat$y) + 1))
 }
 
-demo_prob_cluster_simple <- function() {
+#' Clustering demo with uniform prior.
+#' @export
+demo_prob_cluster_uniform <- function() {
   # Number of clusters
   k <- 10
 
@@ -73,43 +75,47 @@ demo_prob_cluster_simple <- function() {
   L <- (pr_mean - pr_width)
   U <- (pr_mean + pr_width)
 
-  # Function call prob_clust_simple
+  # Function call
   lambda1 <- 5
   pt <- proc.time()
 
-  temp <- prob_clust_simple(data = test_dat[, 1:2],
-                            weights = test_dat$w,
-                            k = k,
-                            init_mu = init_mu,
-                            L = L,
-                            U = U,
-                            lambda = lambda1)
+  clust <- prob_clust(
+    data = test_dat[, 1:2],
+    weights = test_dat$w,
+    k = k,
+    init_mu = init_mu,
+    prior_dist = "uniform",
+    range = c(L, U),
+    lambda = lambda1
+  )
 
-  test_dat$cl <- temp[[1]]
-  mu <- temp[[2]]
-  obj_min <- temp[[3]]
+  test_dat$cl <- clust[[1]]
+  mu <- clust[[2]]
+  obj_min <- clust[[3]]
   proc.time() - pt
 
-  plot_clusters(test_dat[,1:2],
-                test_dat$w,
-                test_dat$cl,
-                mu,
-                main = paste("Range: ", L, "-", U, sep = ""))
+  plot_clusters(
+    test_dat[,1:2],
+    test_dat$w,
+    test_dat$cl,
+    mu,
+    title = paste("Probabilistic clustering, uniform distribution on [", L, ", ", U, "], k = ", k, sep = "")
+  )
 }
 
-
-demo_prob_cluster <- function() {
+#' Clustering demo with Gaussian prior.
+#' @export
+demo_prob_cluster_normal <- function() {
 
   # Number of clusters
   k <- 5
 
   # Initial mu with k-means
   test_dat <- get_testdata_1000()
-  init_kmeans <- stats::kmeans(cbind(rep(test_dat$x, test_dat$w),
-                                     rep(test_dat$y, test_dat$w)),
-                               centers = k)
-
-  init_mu <- init_kmeans$centers
+  init_kmpp <- kmpp(cbind(rep(test_dat$x, test_dat$w),
+                          rep(test_dat$y, test_dat$w)),
+                    k)
+  init_mu <- init_kmpp$centers
 
   # FIXME: Consider plotting with ggplot
   plot_testdata(test_dat)
@@ -120,57 +126,32 @@ demo_prob_cluster <- function() {
                    lwd = 5,
                    col = "red")
 
-  # Prior cluster sizes and corresponding probabilities
-  # Mean
-  pr_mean <- round(sum(test_dat$w) / k)
-
   # Standard deviation
   pr_sd <- 3
 
-  # Max width for prior
-  pr_width <- 30
-
-  # All possible cluster sizes
-  cl_size <- (pr_mean - pr_width):(pr_mean + pr_width)
-
-  ## Uniform prior
-  #d = rep(1/A,A)
-
-  # Normal prior
-  prob <- stats::dnorm(cl_size, mean = pr_mean, sd = pr_sd)
-
   # Function call
-  temp <- prob_clust_prior(data = test_dat[, 1:2],
-                     weights = test_dat$w,
-                     k = k,
-                     init_mu = init_mu,
-                     prior_cl_sizes = cl_size,
-                     prior_prob = prob)
-  test_dat$cl <- temp[[1]]
-  mu <- temp[[2]]
+  clust <-
+    prob_clust(
+      data = test_dat[, 1:2],
+      weights = test_dat$w,
+      k = k,
+      init_mu = init_mu,
+      prior_dist = "normal",
+      sigma = pr_sd
+    )
+  test_dat$cl <- clust[[1]]
+  mu <- clust[[2]]
 
   # Picture 1
   # FIXME: Consider plotting with ggplot
-  graphics::plot(test_dat[, 1:2],
-                 cex = test_dat$w / 3, pch = 19,
-                 main = paste("Probabilistic Clustering, n =", ncol(test_dat)),
-                 col = c_col[test_dat$cl],
-                 xlim = c(min(test_dat$x) - 2, max(test_dat$x) + 1),
-                 ylim = c(min(test_dat$y) - 1, max(test_dat$y) + 1))
-  graphics::points(mu, cex = 2, pch = 4, lwd = 4)
-  graphics::legend(min(test_dat$x) - 2,
-                   max(test_dat$y) + 1,
-                   col = c_col[1:k],
-                   pch = 19, cex = 1,
-                   legend = paste("Cluster", 1:k,
-                                  paste("  (",
-                                        apply(X = t(1:k),
-                                              MARGIN = 2,
-                                              FUN = function(x) {sum(test_dat$w[test_dat$cl == x])}
-                                        ),
-                                        ")", sep=""
-                                  )
-                   )
+
+  plot_clusters(
+    test_dat[,1:2],
+    test_dat$w,
+    test_dat$cl,
+    mu,
+    title =
+      paste("Probabilistic clustering, Gaussian distribution (sd = ", pr_sd, "), k = ", sep = "", k)
   )
 
 }

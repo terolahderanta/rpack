@@ -1,6 +1,6 @@
-#' @title Probabilistic Clustering with Simple Parameters
+#' Probabilistic Clustering with Simple Parameters
 #'
-#' @description Alternating algorithm for maximizing the joint density. This is a simpler version of
+#' Alternating algorithm for maximizing the joint density. This is a simpler version of
 #' the probabilistic clustering algorithm prob_clust, with the constraints to cluster sizes given
 #' only as a boundary from L to U.
 #'
@@ -13,7 +13,7 @@
 #' @param lambda Outgroup-parameter.
 #' @return A list containing cluster allocation, cluster center and the current value of the objective function.
 #' @keywords internal
-prob_clust_simple <- function(data, weights, k, init_mu, L, U, lambda = NULL){
+prob_clust_uniform <- function(data, weights, k, init_mu, L, U, lambda = NULL){
 
   print("========== Step 1 ==========")
 

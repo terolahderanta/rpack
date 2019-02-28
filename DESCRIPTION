@@ -11,6 +11,7 @@ License: GPL-3
 Encoding: UTF-8
 LazyData: true
 Imports:
+    stats,
     tidyverse,
     assertthat,
     datastructures,
@@ -21,5 +22,8 @@ Imports:
     ggplot2
 Suggests:
     testthat,
-    roxygen2
+    roxygen2,
+    knitr,
+    rmarkdown
 RoxygenNote: 6.1.1
+VignetteBuilder: knitr

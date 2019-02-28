@@ -1,4 +1,6 @@
-#' Probabilistic clustering algorithm.
+#' Probabilistic Clustering
+#'
+#' Alternating algorithm for maximizing the joint density.
 #'
 #' @param data A matrix or data.frame containing the data.
 #' @param weights A vector of weights for each data point.
@@ -9,9 +11,15 @@
 #' @param sigma Standard deviation of the normal prior.
 #' @param lambda Outgroup-parameter.
 #' @param divide_objects If TRUE, objects can be divided to multiple clusters
-#' @return A list containting the new cluster allocations for each object in data, the new cluster center locations and maximum of the objective function.
+#' @return A list containting the new cluster allocations for each object in data,
+#' the new cluster center locations and maximum of the objective function.
 #' @export
-prob_clust <- function(data, weights, k, init_mu = NULL, prior_dist = "uniform", range = NULL, sigma = NULL, lambda = NULL, divide_objects = FALSE){
+prob_clust <- function(data, weights,
+                       k, init_mu = NULL,
+                       prior_dist = "uniform",
+                       range = NULL, sigma = NULL,
+                       lambda = NULL,
+                       divide_objects = FALSE) {
   # Creates initial values for mu, if init_mu is not defined
   if(is.null(init_mu)){
     init_kmpp <- kmpp(cbind(rep(data[, 1], weights), rep(data[, 2], weights)), k)
@@ -37,7 +45,15 @@ prob_clust <- function(data, weights, k, init_mu = NULL, prior_dist = "uniform",
     }
 
     # Call function prob_clust_simple
-    output_list <- prob_clust_simple(data = data, weights = weights, k = k, init_mu = init_mu, L = L, U = U, lambda = lambda)
+    output_list <-
+      prob_clust_uniform(
+        data = data,
+        weights = weights,
+        k = k,
+        init_mu = init_mu,
+        L = L, U = U,
+        lambda = lambda
+      )
 
   } else if(prior_dist == "normal"){
 
@@ -56,11 +72,19 @@ prob_clust <- function(data, weights, k, init_mu = NULL, prior_dist = "uniform",
     cl_size <- (pr_mean - pr_width):(pr_mean + pr_width)
 
     # Normal prior probabilities
-    prob <- dnorm(cl_size, mean = pr_mean, sd = sigma)
+    prob <- stats::dnorm(cl_size, mean = pr_mean, sd = sigma)
 
     # Call function prob_clust_prior
-    output_list <- prob_clust_prior(data = data, weights = weights, k = k, init_mu = init_mu,
-                                     prior_cl_sizes = cl_size, prior_prob = prob, divide_objects = divide_objects)
+    output_list <-
+      prob_clust_prior(
+        data = data,
+        weights = weights,
+        k = k,
+        init_mu = init_mu,
+        prior_cl_sizes = cl_size,
+        prior_prob = prob,
+        divide_objects = divide_objects
+      )
 
   } else {
     stop("Prior distribution must be uniform or normal.")

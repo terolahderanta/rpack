@@ -18,14 +18,15 @@ getmode <- function(v) {
 #' @param weights FIXME
 #' @param clusters FIXME
 #' @param mu FIXME
-#' @param main FIXME
+#' @param title Set the title of the plot.
+#' @param subtitle Set the subtitle of the plot.
 #' @export
-plot_clusters <- function(data, weights, clusters, mu, title = ""){
+plot_clusters <- function(data, weights, clusters, mu, title = "", subtitle = NULL){
   # Changing mu to data.frame
   mu <-  data.frame(mu)
 
   # The number of clusters
-  k <- length(mu[, 1])
+  k <- nrow(mu) #length(mu[, 1])
 
   # Changing clusters to factors
   clusters <- as.factor(clusters)
@@ -33,31 +34,37 @@ plot_clusters <- function(data, weights, clusters, mu, title = ""){
   # Cluster sizes
   cl_sizes <- apply(X = t(1:k), MARGIN = 2, FUN = function(x) {sum(weights[clusters == x])})
 
-  # Using ggplot
-  plot <- ggplot2::ggplot(data = NULL) +
-
-  # Plotting objects
-  ggplot2::geom_point(mapping = ggplot2::aes(x = data[, 1], y = data[, 2], size = weights, col = clusters)) +
-
-  # Scaling objects sizes
-  ggplot2::scale_size(range = c(2, 7), guide = FALSE) +
-
-  # Color theme for objects and legend title
-  ggplot2::scale_color_manual(values = rep(c_col, times = 5), name = "Cluster sizes:", labels = cl_sizes) +
-
-  # Point size in legend
-  ggplot2::guides(color = ggplot2::guide_legend(override.aes = list(size=5))) +
-
-  # Labels for axis and title
-  ggplot2::labs(x = "x1", y = "x2", title = title) +
-
-  # Legend position and removing ticks from axis
-  ggplot2::theme(legend.position = "right", axis.text.x = ggplot2::element_blank(),
-                 axis.text.y = ggplot2::element_blank(), axis.ticks = ggplot2::element_blank()) +
-
-  # Plotting cluster centers
-  ggplot2::geom_point(mapping = ggplot2::aes(x = mu[, 1], y = mu[, 2]),
-                      size = 3, col = "black", show.legend = FALSE, shape = 4, stroke = 3)
+  # Plot the clusters with ggplot
+  plot <-
+    ggplot2::ggplot(data = NULL) +
+    ggplot2::geom_point(mapping =
+                          ggplot2::aes(x = data[, 1],
+                                       y = data[, 2],
+                                       size = weights,
+                                       col = clusters)) +
+    ggplot2::scale_size(range = c(2, 7), guide = FALSE) +    # Scale objects sizes
+    ggplot2::scale_color_manual(values =                     # Color theme for objects and legend title
+                                  rep(c_col,
+                                      times = 5),
+                                name = "Cluster sizes:",
+                                labels = cl_sizes) +
+    ggplot2::guides(color =                                 # Point size in legend
+                      ggplot2::guide_legend(override.aes =
+                                              list(size=5))) +
+    ggplot2::labs(x = "x1", y = "x2",
+                  title = title,
+                  subtitle = subtitle) +      # Labels for axis and title
+    ggplot2::theme(legend.position = "right",               # Legend position and removing ticks from axis
+                   axis.text.x = ggplot2::element_blank(),
+                   axis.text.y = ggplot2::element_blank(),
+                   axis.ticks = ggplot2::element_blank()) +
+    ggplot2::geom_point(mapping = ggplot2::aes(x = mu[, 1], # Plot cluster centers
+                                               y = mu[, 2]),
+                        size = 3,
+                        col = "black",
+                        show.legend = FALSE,
+                        shape = 4,
+                        stroke = 3)
 
   return(plot)
 }
