@@ -6,3 +6,4 @@ inst/doc
 .Rbuildignore
 man
 Rplots.pdf
+probabilistic_clustering.Rproj
