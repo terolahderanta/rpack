@@ -12,7 +12,7 @@
 #' @param lambda Outgroup-parameter.
 #' @param divide_objects If TRUE, objects can be divided to multiple clusters.
 #' @return A list containting the new cluster allocations for each object in data, the new cluster center locations and maximum of the objective function.
-#' @export 
+#' @keywords internal
 prob_clust_prior <- function(data, weights, k, init_mu, prior_cl_sizes, prior_prob, lambda = 0, divide_objects = FALSE){
 
   # Number of objects in data
@@ -40,13 +40,13 @@ prob_clust_prior <- function(data, weights, k, init_mu, prior_cl_sizes, prior_pr
 
     # Clusters in equally weighted data (Allocation-step)
     temp_allocation <- prob_clust_estep(data_ew, mu, k, prior_cl_sizes, prior_prob, lambda)
-    
+
     # Clusters in equally weighted data
     clusters_ew <- temp_allocation[[1]]
-    
+
     # Outgroup-clusters (cluster 99)
     clusters_ew <- ifelse(clusters_ew == (k+1), 99, clusters_ew)
-    
+
     # Maximum value of the objective function
     obj_max <- temp_allocation[[2]]
 
@@ -59,7 +59,7 @@ prob_clust_prior <- function(data, weights, k, init_mu, prior_cl_sizes, prior_pr
     # If nothing is changing, stop
     if(all(old_mu == mu)) break
   }
-  
+
   if(!divide_objects) {
     # Converting clusters_ew to original data
     for (i in 1:n) {
@@ -78,6 +78,7 @@ prob_clust_prior <- function(data, weights, k, init_mu, prior_cl_sizes, prior_pr
 #' @param clusters_ew A vector of cluster assignments for each data point.
 #' @param k The number of clusters.
 #' @return New cluster centers.
+#' @keywords internal
 prob_clust_mstep <- function(data_ew, clusters_ew, k){
 
   # Matrix for cluster centers
@@ -100,6 +101,7 @@ prob_clust_mstep <- function(data_ew, clusters_ew, k){
 #' @param prior_prob Corresponding probabilities (sum to 1).
 #' @param lambda Outgroup-parameter.
 #' @return New cluster allocations for each object in data_ew
+#' @keywords internal
 prob_clust_estep <- function(data_ew, mu, k, prior_cl_sizes, prior_prob, lambda){
 
   # Number of objects in data_ew
@@ -145,12 +147,12 @@ prob_clust_estep <- function(data_ew, mu, k, prior_cl_sizes, prior_prob, lambda)
 
   # Solving the optimization problem
   solve(lp1)
-  
+
   # Maximum of the objective function
   obj_max <- round(lpSolveAPI::get.objective(lp1), digits = 2)
 
   # Print the value of the objective function
   print(paste("Value of the objective function:", obj_max))
-  
+
   return(list(apply(matrix(lpSolveAPI::get.variables(lp1)[1:(n * k)], ncol = k), 1, which.max), obj_max))
 }

@@ -12,7 +12,7 @@
 #' @param U The upper limit for cluster sizes.
 #' @param lambda Outgroup-parameter.
 #' @return A list containing cluster allocation, cluster center and the current value of the objective function.
-#' @export prob_clust_simple
+#' @keywords internal
 prob_clust_simple <- function(data, weights, k, init_mu, L, U, lambda = NULL){
 
   print("========== Step 1 ==========")
@@ -101,6 +101,7 @@ prob_clust_simple <- function(data, weights, k, init_mu, L, U, lambda = NULL){
 #' @param mu Parameters (locations) that define the k distributions.
 #' @param lambda FIXME
 #' @return The value of the objective function.
+#' @keywords internal
 obj_function <- function(data, weights, clusters, mu, lambda){
 
   n <- length(data[,1])
@@ -134,6 +135,7 @@ obj_function <- function(data, weights, clusters, mu, lambda){
 #' @param clusters_ew A vector of cluster assignments for each data point.
 #' @param k The number of clusters.
 #' @return New cluster centers.
+#' @keywords internal
 prob_clust_parameter <- function(data_ew, clusters_ew, k){
 
   # Matrix for cluster centers
@@ -157,14 +159,15 @@ prob_clust_parameter <- function(data_ew, clusters_ew, k){
 #' @param U The upper limit for cluster sizes.
 #' @param lambda Outgroup-parameter
 #' @return New cluster allocations for each object in data_ew and the maximum of the objective function.
+#' @keywords internal
 prob_clust_allocation <- function(data_ew, mu, k, L, U, lambda){
 
   # Number of objects in data_ew
   n <- length(data_ew[,1])
-  
+
   # Is there an outgroup cluster
   is_outgroup <- !is.null(lambda)
-  
+
   # Number of decision variables
   n_decision <- ifelse(is_outgroup, n * k + n, n * k)
 
@@ -225,6 +228,7 @@ prob_clust_allocation <- function(data_ew, mu, k, L, U, lambda){
 #' @param U An upper limit for cluster sizes.
 #' @param lambda Outgroup-parameter
 #' @return New cluster allocations for each object in data_ew.
+#' @keywords internal
 prob_clust_allocation_indiv <- function(data, weights, clusters, mu, k, L, U, lambda){
 
   # Number of objects in data_ew
@@ -300,6 +304,7 @@ prob_clust_allocation_indiv <- function(data, weights, clusters, mu, k, L, U, la
 #' @param weights The weights of the data points
 #' @param k The number of clusters.
 #' @return New cluster centers.
+#' @keywords internal
 prob_clust_parameter_weights <- function(data, clusters, weights, k){
 
   # Matrix for cluster centers
@@ -324,6 +329,7 @@ prob_clust_parameter_weights <- function(data, clusters, weights, k){
 #' @param U An upper limit for cluster sizes.
 #' @param lambda FIXME
 #' @return New cluster allocations for each object in data_ew
+#' @keywords internal
 prob_clust_allocation_weights <- function(data, weights, mu, k, L, U, lambda){
 
   # Number of objects in data_ew

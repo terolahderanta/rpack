@@ -10,6 +10,7 @@
 #' @param lambda Outgroup-parameter.
 #' @param divide_objects If TRUE, objects can be divided to multiple clusters
 #' @return A list containting the new cluster allocations for each object in data, the new cluster center locations and maximum of the objective function.
+#' @export
 prob_clust <- function(data, weights, k, init_mu = NULL, prior_dist = "uniform", range = NULL, sigma = NULL, lambda = NULL, divide_objects = FALSE){
   # Creates initial values for mu, if init_mu is not defined
   if(is.null(init_mu)){
@@ -62,7 +63,7 @@ prob_clust <- function(data, weights, k, init_mu = NULL, prior_dist = "uniform",
                                      prior_cl_sizes = cl_size, prior_prob = prob, divide_objects = divide_objects)
 
   } else {
-    stop("Prior distribution must be uniform or normal")
+    stop("Prior distribution must be uniform or normal.")
   }
 
   return(output_list)

@@ -7,8 +7,8 @@ c_col = c("blue","red","green","orange","hotpink","cyan","yellowgreen","purple",
 #' Calculate the mode of vector v
 #' @param v A vector.
 #' @return The mode.
+#' @export
 getmode <- function(v) {
-
   uniqv <- unique(v)
   uniqv[which.max(tabulate(match(v, uniqv)))]
 }
@@ -19,51 +19,53 @@ getmode <- function(v) {
 #' @param clusters FIXME
 #' @param mu FIXME
 #' @param main FIXME
+#' @export
 plot_clusters <- function(data, weights, clusters, mu, title = ""){
   # Changing mu to data.frame
   mu <-  data.frame(mu)
-          
+
   # The number of clusters
   k <- length(mu[, 1])
-          
+
   # Changing clusters to factors
   clusters <- as.factor(clusters)
-  
+
   # Cluster sizes
   cl_sizes <- apply(X = t(1:k), MARGIN = 2, FUN = function(x) {sum(weights[clusters == x])})
 
   # Using ggplot
-  plot <- ggplot2::ggplot(data = NULL) +  
-          
+  plot <- ggplot2::ggplot(data = NULL) +
+
   # Plotting objects
   ggplot2::geom_point(mapping = ggplot2::aes(x = data[, 1], y = data[, 2], size = weights, col = clusters)) +
-  
-  # Scaling objects sizes 
+
+  # Scaling objects sizes
   ggplot2::scale_size(range = c(2, 7), guide = FALSE) +
-  
+
   # Color theme for objects and legend title
-  ggplot2::scale_color_manual(values = rep(c_col, times = 5), name = "Cluster sizes:", labels = cl_sizes) +    
-          
+  ggplot2::scale_color_manual(values = rep(c_col, times = 5), name = "Cluster sizes:", labels = cl_sizes) +
+
   # Point size in legend
-  ggplot2::guides(color = ggplot2::guide_legend(override.aes = list(size=5))) + 
-  
+  ggplot2::guides(color = ggplot2::guide_legend(override.aes = list(size=5))) +
+
   # Labels for axis and title
-  ggplot2::labs(x = "x1", y = "x2", title = title) +        
-  
+  ggplot2::labs(x = "x1", y = "x2", title = title) +
+
   # Legend position and removing ticks from axis
   ggplot2::theme(legend.position = "right", axis.text.x = ggplot2::element_blank(),
-                 axis.text.y = ggplot2::element_blank(), axis.ticks = ggplot2::element_blank()) +        
+                 axis.text.y = ggplot2::element_blank(), axis.ticks = ggplot2::element_blank()) +
 
   # Plotting cluster centers
-  ggplot2::geom_point(mapping = ggplot2::aes(x = mu[, 1], y = mu[, 2]), 
+  ggplot2::geom_point(mapping = ggplot2::aes(x = mu[, 1], y = mu[, 2]),
                       size = 3, col = "black", show.legend = FALSE, shape = 4, stroke = 3)
-          
+
   return(plot)
 }
 
 #' K-means++ algorithm FIXME: insert ref!
 #' @param X FIXME
 #' @param k FIXME
+#' @export
 kmpp <- function(X, k) {
 
   n <- nrow(X)
@@ -77,11 +79,4 @@ kmpp <- function(X, k) {
   }
 
   stats::kmeans(X, X[C, ])
-}
-
-#' Calculate the mode of vector v
-#'
-getmode <- function(v) {
-  uniqv <- unique(v)
-  uniqv[which.max(tabulate(match(v, uniqv)))]
 }
