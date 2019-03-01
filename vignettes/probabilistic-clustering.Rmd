@@ -18,14 +18,14 @@ knitr::opts_chunk$set(
 )
 ```
 
-This vignette provides a tutorial on main functionality of the `pclustr` package. 
+This vignette provides a tutorial on main functionality of the `pclustr` package.
 
 ## Libraries
 
 First, load the `pclustr` package 
 as well as `ggplot2` for plotting the data:
 
-```{r}
+```{r, echo=TRUE, results='hide', message=FALSE, warning=FALSE}
 library(pclustr)
 library(tidyverse)
 library(ggplot2)
@@ -162,7 +162,7 @@ plot_clusters(
   clusters = dat$cl,
   mu = mu,
   title = paste("Probabilistic clustering, k = ", k, sep = ""),
-  subtitle = paste("Uniform prior on [", L, ", ", U, "]", sep = "")
+  subtitle = paste("Uniform prior in [", L, ", ", U, "] on cluster weights", sep = "")
 )
 ```
 
@@ -199,7 +199,7 @@ plot_clusters(
   mu = mu,
   title = paste("Probabilistic clustering, k = ", k, 
                 sep = ""),
-  subtitle = paste("Gaussian prior (sd = ", pr_sd, ")", 
+  subtitle = paste("Gaussian prior on cluster weights (sd = ", pr_sd, ")", 
                    sep = "")
 ) 
 ```
