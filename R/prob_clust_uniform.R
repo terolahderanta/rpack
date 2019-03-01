@@ -18,7 +18,7 @@ prob_clust_uniform <- function(data, weights, k, init_mu, L, U, lambda = NULL){
   print("========== Step 1 ==========")
 
   # Number of objects in data
-  n <- length(data[,1])
+  n = nrow(data)
 
   # Weights must be integers
   weights <- round(weights)
@@ -108,17 +108,23 @@ obj_function <- function(data, weights, clusters, mu, lambda){
   k <- length(mu[,1])
 
   # Matrix contains the log-likelihoods of the individual data points
-  C <- apply(mu, MARGIN = 1, FUN = mvtnorm::dmvnorm, x = data, sigma = diag(2), log = TRUE)
+  C <- apply(
+    mu,
+    MARGIN = 1,
+    FUN = mvtnorm::dmvnorm,
+    x = data,
+    sigma = diag(2),
+    log = TRUE
+  )
 
   # Scaling the tuning parameter lambda
   nu2 <- -(mean(stats::dist(data))/sqrt(k)) ^ 2
 
   # Cluster allocation
-  z <- matrix(0, nrow = n, ncol = k)
-
-  for (i in 1:k) {
-    z[,i] <- as.numeric(clusters == i)
-  }
+  z <- 1:k %>%
+    sapply(
+      FUN = function(x) as.numeric(clusters == x)
+  )
 
   # Outlier allocation
   z_out <- as.numeric(clusters == 99)
@@ -143,8 +149,8 @@ prob_clust_parameter <- function(data_ew, clusters_ew, k){
 
   # Update mu
   for (i in 1:k) {
-    mu[i,] <- c(mean(data_ew[clusters_ew == i,1]),mean(data_ew[clusters_ew == i,2]))
-    #mu[i,] <- apply(data_ew[clusters_ew == i,], 2, FUN=sum) / length(data_ew[clusters_ew == i,])
+    mu[i,] <- c(mean(data_ew[clusters_ew == i, 1]),
+                mean(data_ew[clusters_ew == i, 2]))
   }
 
   return(mu)
@@ -232,7 +238,8 @@ prob_clust_allocation <- function(data_ew, mu, k, L, U, lambda){
 prob_clust_allocation_indiv <- function(data, weights, clusters, mu, k, L, U, lambda){
 
   # Number of objects in data_ew
-  n <- length(data[,1])
+  #n <- length(data[,1])
+  n <- nrow(data)
 
   # Maximum number of update laps
   max_update <- 100
@@ -251,7 +258,14 @@ prob_clust_allocation_indiv <- function(data, weights, clusters, mu, k, L, U, la
     points <- sample(1:n)
 
     # Matrix contains the log-likelihoods of the individual data points
-    C <- apply(mu, MARGIN = 1, FUN = mvtnorm::dmvnorm, x = data, sigma = diag(2), log = TRUE)
+    C <- apply(
+      mu,
+      MARGIN = 1,
+      FUN = mvtnorm::dmvnorm,
+      x = data,
+      sigma = diag(2),
+      log = TRUE
+    )
 
     # One allocation update for all the points
     for (i in points) {
@@ -281,8 +295,15 @@ prob_clust_allocation_indiv <- function(data, weights, clusters, mu, k, L, U, la
 
         # Calculate the value of the objective function
         temp_clust <- temp_clust[,acc_move]
-        temp_obj <- apply(X = temp_clust, MARGIN = 2, FUN = obj_function,
-                             data = data, weights = weights, mu = mu, lambda = lambda)
+        temp_obj <- apply(
+          X = temp_clust,
+          MARGIN = 2,
+          FUN = obj_function,
+          data = data,
+          weights = weights,
+          mu = mu,
+          lambda = lambda
+        )
 
         # Choose the highest value
         clusters[i] <- (1:k)[acc_move][which.max(temp_obj)]

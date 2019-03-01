@@ -27,6 +27,7 @@ as well as `ggplot2` for plotting the data:
 
 ```{r}
 library(pclustr)
+library(tidyverse)
 library(ggplot2)
 ```
 
@@ -37,22 +38,25 @@ Let's set up some data to be clustered.
 
 ```{r data, include=TRUE, echo = TRUE}
 set.seed(5)
-dat <- data.frame(x = c(stats::rnorm(250, mean = 0.5, sd = 2), 
-                        stats::rnorm(250, mean = 21.5, sd = 3),
-                        stats::rnorm(250, mean = 2.0, sd = 6), 
-                        stats::rnorm(250, mean = 5.5, sd = 2)),
-                  y = c(stats::rnorm(250, mean = 0.5, sd = 2), 
-                        stats::rnorm(250, mean = 1.0, sd = 7.5),
-                        stats::rnorm(250, mean = 20.5, sd= 5.5), 
-                        stats::rnorm(250, mean = 5.5, sd = 2)),
-                  w =  round(runif(1000, min = 0.51, max = 10.49)),
-                  id = 1:1000)
+
+dat <- tibble(
+  x1 = c(stats::rnorm(50, mean = 1.5, sd = 0.8), 
+         stats::rnorm(50, mean = 5.5, sd = 0.8),
+         stats::rnorm(50, mean = 3.0, sd = 0.8), 
+         stats::rnorm(50, mean = 4.5, sd = 0.8), 8),
+  x2 = c(stats::rnorm(50, mean = 1.0, sd = 0.8), 
+         stats::rnorm(50, mean = 1.5, sd = 1.0),
+         stats::rnorm(50, mean = 4.5, sd= 1.0), 
+         stats::rnorm(50, mean = 4.5, sd = 0.8), 6),
+  w =  round(stats::runif(201, min = 0.51, max = 10.49)),
+  id = 1:201
+)
 
 ggplot(
   data = dat, 
   mapping =
-    aes(x = x,
-        y = y,
+    aes(x = x1,
+        y = x2,
         size = w)
 ) +
   geom_point() +
@@ -71,10 +75,42 @@ ggplot(
   ) 
 ```
 
+Bigger datasets take a bit longer to cluster. To get a hang of the required processing times, you could try also the following sets:
+
+```{r bigger_data, echo = TRUE, include = TRUE}
+dat_500 <- tibble(
+  x1 = c(stats::rnorm(100, mean = 0.5, sd = 2), 
+         stats::rnorm(150, mean = 23.5, sd = 5),
+         stats::rnorm(100, mean = 2.0, sd = 6), 
+         stats::rnorm(150, mean = 5.5, sd = 2)),
+  x2 = c(stats::rnorm(100, mean = 0.5, sd = 2), 
+         stats::rnorm(150, mean = 1.0, sd = 7.5),
+         stats::rnorm(100, mean = 20.5, sd= 5.5),
+         stats::rnorm(150, mean = 5.5, sd = 2)),
+  w =  round(stats::runif(500, min = 0.51, max = 10.49)),
+  id = 1:500
+)
+
+dat_1000 <- tibble(
+  x1 = c(stats::rnorm(250, mean = 0.5, sd = 2), 
+         stats::rnorm(250, mean = 21.5, sd = 3),
+         stats::rnorm(250, mean = 2.0, sd = 6), 
+         stats::rnorm(250, mean = 5.5, sd = 2)),
+  x2 = c(stats::rnorm(250, mean = 0.5, sd = 2), 
+         stats::rnorm(250, mean = 1.0, sd = 7.5),
+         stats::rnorm(250, mean = 20.5, sd= 5.5), 
+         stats::rnorm(250, mean = 5.5, sd = 2)),
+  w =  round(stats::runif(1000, min = 0.51, max = 10.49)),
+  id = 1:1000
+)
+```
+
+
+
 ## Clustering with uniform prior, k=10
 
 First, cluster the data into k=10 clusters with a uniform prior for the cluster weights. In other words, 
-we let the sums of all the weights in a cluster vary uniformly within a given range. We set the
+we let the total weights of clusters vary uniformly within a given range. We set the
 range as the mean of object weight +- 20.
 
 ```{r uniform_clustering, include=TRUE, echo = TRUE}
@@ -96,13 +132,14 @@ U <- (pr_mean + pr_width)
 lambda1 <- 5
 
 # Initialize cluster centers with kmeans
-init_kmpp <- kmpp(cbind(rep(dat$x, dat$w),
-                        rep(dat$y, dat$w)),
+init_kmpp <- kmpp(cbind(rep(dat$x1, dat$w),
+                        rep(dat$x2, dat$w)),
                   k)
 init_mu <- init_kmpp$centers
 
+# Cluster
 clust <- prob_clust(
-  data = dat[, 1:2],
+  data = dat %>% select(x1, x2),
   weights = dat$w,
   k = k,
   init_mu = init_mu,
@@ -119,10 +156,11 @@ obj_min <- clust[[3]]
 Plot the clusters with `plot_clusters`.
 ```{r uniform_clusterplot, echo=TRUE, include=TRUE}
 plot_clusters(
-  dat[,1:2],
-  dat$w,
-  dat$cl,
-  mu,
+  x = dat %>% dplyr::pull(x1),
+  y = dat %>% dplyr::pull(x2),
+  weights = dat$w,
+  clusters = dat$cl,
+  mu = mu,
   title = paste("Probabilistic clustering, k = ", k, sep = ""),
   subtitle = paste("Uniform prior on [", L, ", ", U, "]", sep = "")
 )
@@ -131,7 +169,7 @@ plot_clusters(
 ## Clustering with Gaussian prior, k=10
 
 Second, cluster the data into k=10 clusters with a Gaussian prior for the cluster weights. In other words, 
-we let the sums of all the weights in a cluster vary normally, setting the standard deviation as 3.
+we let the total weights of clusters vary normally, setting the standard deviation as 3.
 
 ```{r gaussian_clustering, include=TRUE, echo = TRUE}
    
@@ -139,7 +177,7 @@ pr_sd <- 3
 
 clust <-
   prob_clust(
-    data = dat[, 1:2],
+    data = dat %>% select(x1, x2),
     weights = dat$w,
     k = k,                # already set as 10
     init_mu = init_mu,    # use the same initial centers as above
@@ -154,10 +192,11 @@ Plot the clusters.
 
 ```{r gaussian_clusterplot, include=TRUE, echo=TRUE}
 plot_clusters(
-  dat[,1:2],
-  dat$w,
-  dat$cl,
-  mu,
+  x = dat %>% pull(x1),
+  y = dat %>% pull(x2),
+  weights = dat$w,
+  clusters= dat$cl,
+  mu = mu,
   title = paste("Probabilistic clustering, k = ", k, 
                 sep = ""),
   subtitle = paste("Gaussian prior (sd = ", pr_sd, ")", 

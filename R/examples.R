@@ -112,8 +112,10 @@ demo_prob_cluster_normal <- function() {
 
   # Initial mu with k-means
   test_dat <- get_testdata_1000()
-  init_kmpp <- kmpp(cbind(rep(test_dat$x, test_dat$w),
-                          rep(test_dat$y, test_dat$w)),
+  init_kmpp <- kmpp(cbind(rep(test_dat$x,
+                              test_dat$w),
+                          rep(test_dat$y,
+                              test_dat$w)),
                     k)
   init_mu <- init_kmpp$centers
 

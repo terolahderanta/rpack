@@ -23,7 +23,7 @@ prob_clust_prior <- function(data,
                              divide_objects = FALSE) {
 
   # Number of objects in data
-  n <- length(data[,1])
+  n <- nrow(data)
 
   # Weights must be integers
   weights <- round(weights)
