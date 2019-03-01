@@ -18,7 +18,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-This vignette provides a tutorial on the `pclustr` package. 
+This vignette provides a tutorial on main functionality of the `pclustr` package. 
 
 ## Libraries
 
