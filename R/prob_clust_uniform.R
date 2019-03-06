@@ -121,9 +121,9 @@ obj_function <- function(data, weights, clusters, mu, lambda){
   nu2 <- -(mean(stats::dist(data))/sqrt(k)) ^ 2
 
   # Cluster allocation
-  z <- 1:k %>%
-    sapply(
-      FUN = function(x) as.numeric(clusters == x)
+  z <-  sapply(
+    1:k,
+    FUN = function(x) as.numeric(clusters == x)
   )
 
   # Outlier allocation

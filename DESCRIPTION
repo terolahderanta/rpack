@@ -19,7 +19,9 @@ Imports:
     lpSolve,
     mvtnorm,
     pracma,
-    ggplot2
+    ggplot2,
+    dplyr,
+    purrr
 Suggests:
     testthat,
     roxygen2,

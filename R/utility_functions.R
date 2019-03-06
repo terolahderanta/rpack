@@ -85,21 +85,41 @@ plot_clusters <- function(x, y, weights, clusters, mu, title = "", subtitle = NU
   return(plot)
 }
 
-#' K-means++ algorithm FIXME: insert ref!
-#' @param X FIXME
-#' @param k FIXME
+#' Kmeans++
+#'
+#' Implementation of the K-means++ algorithm. Whereas normal kmeans selects all the initial center
+#' cluster centers randomly, kmeans++ randomly selects only the first center. For each
+#' consecutive center, the probability of selection is weighed by the distance to already selected
+#' centers.
+#'
+#' Implementation adapted from one by Hans Werner (https://stat.ethz.ch/pipermail/r-help/2012-January/300051.html).
+#'
+#' See following article for more information on kmeans++:
+#'
+#'   Arthur, D., and Vassilvitskii, S. "k-means++: The advantages of careful seeding."
+#'   Proceedings of the eighteenth annual ACM-SIAM symposium on Discrete algorithms. Society
+#'   for Industrial and Applied Mathematics, 2007.
+#'
+#' @param X A matrix or a data frame containing the objects, one per row.
+#' @param k Number of clusters.
 #' @export
 kmpp <- function(X, k) {
 
+  if (!is.matrix(X)) X <- as.matrix(X)  # X must be a matrix
+
   n <- nrow(X)
-  C <- numeric(k)
-  C[1] <- sample(1:n, 1)
+  ncoords <- ncol(X)
+  C <- numeric(k)                # initialize centers to zero
+  C[1] <- sample(1:n, size = 1)  # select first element randomly
 
   for (i in 2:k) {
-    dm <- pracma::distmat(X, X[C, ])
-    pr <- apply(dm, 1, min); pr[C] <- 0
+    dm <- pracma::distmat(X, matrix(X[C, ], ncol = ncoords))
+    pr <- apply(dm, 1, min)
     C[i] <- sample(1:n, 1, prob = pr)
   }
 
-  stats::kmeans(X, X[C, ])
+  cl <- stats::kmeans(X, X[C, ])
+  cl$initial_centers <- X[C,]
+
+  return(cl)
 }

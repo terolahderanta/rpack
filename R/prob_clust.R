@@ -2,10 +2,10 @@
 #'
 #' Alternating algorithm for maximizing the joint density.
 #'
-#' @param data A matrix or data.frame containing the data.
-#' @param weights A vector of weights for each data point.
+#' @param data A matrix or data.frame whose rows contain the objects to be clustered.
+#' @param weights A vector of weights for each data point. The weights will be rounded to nearest integers.
 #' @param k The number of clusters.
-#' @param init_mu Parameters (locations) that define the k distributions.
+#' @param init_mu A matrix whose rows indicate the initial cluster centers.
 #' @param prior_dist Prior distribution for cluster sizes. Possible values are "uniform" and "normal".
 #' @param range Range of the uniform prior distribution as a vector c(lower, upper).
 #' @param sigma Standard deviation of the normal prior.
@@ -14,15 +14,38 @@
 #' @return A list containting the new cluster allocations for each object in data,
 #' the new cluster center locations and maximum of the objective function.
 #' @export
-prob_clust <- function(data, weights,
-                       k, init_mu = NULL,
+prob_clust <- function(data,
+                       weights,
+                       k,
+                       init_mu = NULL,
                        prior_dist = "uniform",
-                       range = NULL, sigma = NULL,
+                       range = NULL,
+                       sigma = NULL,
                        lambda = NULL,
                        divide_objects = FALSE) {
-  # Creates initial values for mu, if init_mu is not defined
+
+  # Check arguments
+  assertthat::assert_that(is.matrix(data) || is.data.frame(data), msg = "data must be a matrix or a data.frame!")
+  assertthat::assert_that(nrow(data) >= k, msg = "must have at least k data points!")
+  assertthat::assert_that(is.numeric(weights), msg = "weight must be an numeric vector!")
+  assertthat::assert_that(length(weights) == nrow(data), msg = "data and weight must have the same number of rows!")
+  assertthat::assert_that(is.numeric(k), msg = "k must be a numeric scalar!")
+  assertthat::assert_that(length(k) == 1, msg = "k must be a numeric scalar!")
+
+  if(!purrr::is_null(init_mu)) assertthat::assert_that(is.matrix(init_mu))
+  if(!purrr::is_null(range)) {
+    assertthat::assert_that(is.numeric(range))
+    assertthat::assert_that(length(range) == 2)
+  }
+  if(!purrr::is_null(sigma)) assertthat::is.number(sigma)
+  if(!purrr::is_null(lambda)) assertthat::is.number(lambda)
+  if(!is.matrix(data)) data <- as.matrix(data)
+  assertthat::assert_that(is.logical(divide_objects), msg = "divide_objects must be TRUE or FALSE!")
+
+  # Create initial values for mu, if init_mu is not defined
   if(is.null(init_mu)){
-    init_kmpp <- kmpp(cbind(rep(data[, 1], weights), rep(data[, 2], weights)), k)
+    weighted_data <- apply(data, 2, function(x) rep(x, weights))  # replicate data points according to their weight
+    init_kmpp <- kmpp(weighted_data, k)
     init_mu <- init_kmpp$centers
   }
 
@@ -87,7 +110,7 @@ prob_clust <- function(data, weights,
       )
 
   } else {
-    stop("Prior distribution must be uniform or normal.")
+    stop("prior_dist must be 'uniform' or 'normal'.")
   }
 
   return(output_list)

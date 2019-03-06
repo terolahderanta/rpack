@@ -22,12 +22,13 @@ This vignette provides a tutorial on main functionality of the `pclustr` package
 
 ## Libraries
 
-First, load the `pclustr` package 
-as well as `ggplot2` for plotting the data:
+First, load the necessary libraries. In addition to the `pclustr` package, we use 
+`tidyverse` and `dplyr` for sample data manipulation and  `ggplot2` for plotting.
 
 ```{r, echo=TRUE, results='hide', message=FALSE, warning=FALSE}
 library(pclustr)
 library(tidyverse)
+library(dplyr)
 library(ggplot2)
 ```
 
