@@ -76,7 +76,7 @@ prob_clust_prior <- function(data,
     # Objects can be divided to multiple clusters
     clusters <- clusters_ew
   }
-  return(list(clusters, mu, obj_max))
+  return(list(clusters = clusters, centers = mu, obj = obj_max))
 }
 
 #' Update the parameters (centers) for each cluster.

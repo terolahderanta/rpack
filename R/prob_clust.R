@@ -26,6 +26,8 @@ prob_clust <- function(data,
 
   # Check arguments
   assertthat::assert_that(is.matrix(data) || is.data.frame(data), msg = "data must be a matrix or a data.frame!")
+  if (is.matrix(data)) data <- tibble::as_tibble(data)                   # convert to tibble for consistency
+
   assertthat::assert_that(nrow(data) >= k, msg = "must have at least k data points!")
   assertthat::assert_that(is.numeric(weights), msg = "weight must be an numeric vector!")
   assertthat::assert_that(length(weights) == nrow(data), msg = "data and weight must have the same number of rows!")
@@ -39,7 +41,7 @@ prob_clust <- function(data,
   }
   if(!purrr::is_null(sigma)) assertthat::is.number(sigma)
   if(!purrr::is_null(lambda)) assertthat::is.number(lambda)
-  if(!is.matrix(data)) data <- as.matrix(data)
+
   assertthat::assert_that(is.logical(divide_objects), msg = "divide_objects must be TRUE or FALSE!")
 
   # Create initial values for mu, if init_mu is not defined

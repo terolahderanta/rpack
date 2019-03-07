@@ -90,7 +90,7 @@ prob_clust_uniform <- function(data, weights, k, init_mu, L, U, lambda = NULL){
   }
 
   # Return cluster allocation, cluster center and the current value of the objective function
-  return(list(clusters, mu, obj_max))
+  return(list(clusters = clusters, centers = mu, obj = obj_max))
 }
 
 #' Calculate the objective function value, given clusters and mu.
@@ -104,8 +104,8 @@ prob_clust_uniform <- function(data, weights, k, init_mu, L, U, lambda = NULL){
 #' @keywords internal
 obj_function <- function(data, weights, clusters, mu, lambda){
 
-  n <- length(data[,1])
-  k <- length(mu[,1])
+  n <- nrow(data)
+  k <- nrow(mu)
 
   # Matrix contains the log-likelihoods of the individual data points
   C <- apply(
@@ -145,7 +145,19 @@ obj_function <- function(data, weights, clusters, mu, lambda){
 prob_clust_parameter <- function(data_ew, clusters_ew, k){
 
   # Matrix for cluster centers
-  mu <- matrix(0,nrow = k, ncol = length(data_ew[1,]))
+  mu <- matrix(0, nrow = k, ncol = ncol(data_ew))
+
+  #col_means <- function(data) {
+  #  colSums(data) / nrow(data)
+  #}
+
+  #sapply(1:k, function(i) {
+  #  mu[i, ] = col_means(data_ew[clusters_ew == i])
+  #})
+
+  #mu <- apply(data_ew, 2, function(data_col) {
+  #  mean(data_col[clusters_ew == i])
+  #})
 
   # Update mu
   for (i in 1:k) {
@@ -169,7 +181,7 @@ prob_clust_parameter <- function(data_ew, clusters_ew, k){
 prob_clust_allocation <- function(data_ew, mu, k, L, U, lambda){
 
   # Number of objects in data_ew
-  n <- length(data_ew[,1])
+  n <- nrow(data_ew)
 
   # Is there an outgroup cluster
   is_outgroup <- !is.null(lambda)
@@ -320,7 +332,7 @@ prob_clust_allocation_indiv <- function(data, weights, clusters, mu, k, L, U, la
 
 #' Updates the parameters (centers) for each cluster.
 #'
-#' @param data A matrix or data.frame containing the data.
+#' @param data A data.frame containing the data points, one per row.
 #' @param clusters A vector of cluster assignments for each data point.
 #' @param weights The weights of the data points
 #' @param k The number of clusters.
@@ -329,12 +341,12 @@ prob_clust_allocation_indiv <- function(data, weights, clusters, mu, k, L, U, la
 prob_clust_parameter_weights <- function(data, clusters, weights, k){
 
   # Matrix for cluster centers
-  mu <- matrix(0,nrow = k, ncol = length(data[1,]))
+  mu <- matrix(0, nrow = k, ncol = ncol(data))
 
   # Update mu for each cluster
   for (i in 1:k) {
     # Weighted mean
-    mu[i,] <- apply(data[clusters == i,]*weights[clusters == i], 2, FUN=sum) / sum(weights[clusters == i])
+    mu[i,] <- colSums(data[clusters == i,] * weights[clusters == i]) / sum(weights[clusters == i])
   }
 
   return(mu)
