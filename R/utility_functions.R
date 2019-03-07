@@ -14,11 +14,11 @@ getmode <- function(v) {
 }
 
 #' Plot the clusters.
-#' @param x FIXME
-#' @param y FIXME
-#' @param weights FIXME
-#' @param clusters FIXME
-#' @param mu FIXME
+#' @param x x-coordinates.
+#' @param y y-coordinates.
+#' @param weights The weigths of the objects in data.
+#' @param clusters A vector of cluster assignments for each data point.
+#' @param mu The parameters (locations) that define the k distributions.
 #' @param title Set the title of the plot.
 #' @param subtitle Set the subtitle of the plot.
 #' @export
