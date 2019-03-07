@@ -226,8 +226,8 @@ prob_clust_allocation <- function(data_ew, mu, k, L, U, lambda){
 #' Updates cluster allocations by individually allocationg points.
 #'
 #' @param data A matrix or data.frame containing the data, where each object is considered to be equally weighted.
-#' @param weights FIXME
-#' @param clusters FIXME
+#' @param weights The weigths of the objects in data.
+#' @param clusters A vector of cluster assignments for each data point.
 #' @param mu The parameters (locations) that define the k distributions.
 #' @param k The number of clusters.
 #' @param L A lower limit for cluster sizes.
@@ -348,7 +348,7 @@ prob_clust_parameter_weights <- function(data, clusters, weights, k){
 #' @param k The number of clusters.
 #' @param L A lower limit for cluster sizes.
 #' @param U An upper limit for cluster sizes.
-#' @param lambda FIXME
+#' @param lambda Outgroup-parameter.
 #' @return New cluster allocations for each object in data_ew
 #' @keywords internal
 prob_clust_allocation_weights <- function(data, weights, mu, k, L, U, lambda){
