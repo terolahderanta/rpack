@@ -15,80 +15,45 @@
 #' @keywords internal
 prob_clust_uniform <- function(data, weights, k, init_mu, L, U, lambda = NULL){
 
-  print("========== Step 1 ==========")
-
   # Number of objects in data
-  n = nrow(data)
-
+  n <- nrow(data)
+  
   # Weights must be integers
   weights <- round(weights)
-
-  # Equally weighted data
-  data_ew <- apply(data, MARGIN = 2, FUN = rep, times = weights)
-
-  # Original id:s for each data point in equally weighted data
-  id_ew = rep(1:n, times = weights)
-
+  
   # Initial clusters
   clusters <- rep(0,n)
-
+  
   #Cluster centers
   mu <- init_mu
-
+  
   # Maximum number of laps
-  max_sim <- 30
-
-  # Narrowing the prior interval
-  narr <- round(max(weights)/2)
-
+  max_sim <- 50
+  
   for (iter in 1:max_sim) {
     # Old mu is saved to check for convergence
     old_mu <- mu
-
+    
     # Clusters in equally weighted data (Allocation-step)
-    temp_allocation <- prob_clust_allocation(data_ew, mu, k, L + narr, U - narr, lambda)
-    clusters_ew <- temp_allocation[[1]]
-    clusters_ew <- ifelse(clusters_ew == (k+1), 99, clusters_ew)
+    temp_allocation <- prob_clust_allocation_weights(data, weights, mu, k, L, U, lambda)
+    assign_frac <- temp_allocation[[1]]
     obj_max <- temp_allocation[[2]]
-
+    
     # Updating cluster centers (Parameter-step)
-    mu <- prob_clust_parameter(data_ew, clusters_ew, k)
-
+    mu <- prob_clust_parameter_weights(data, assign_frac, weights, k)
+    
     print(paste("Iteration:",iter))
-
+    
     # If nothing is changing, stop
     if(all(old_mu == mu)) break
   }
-
-  # Converting clusters_ew to original data
-  for (i in 1:n) {
-    clusters[i] <- getmode(clusters_ew[id_ew == i])
-  }
-
-  print("========== Step 2 ==========")
-
-  max_indiv <- 10
-
-  for (indiv_lap in 1:max_indiv) {
-    # Old mu is saved to check for convergence
-    old_mu <- mu
-
-    # Updating point allocation individually
-    clusters <- prob_clust_allocation_indiv(data, weights, clusters, mu, k, L, U, lambda)
-
-    # Updating cluster centers
-    mu <- prob_clust_parameter_weights(data, clusters, weights, k)
-
-    # Value of the objective function
-    obj_max <- obj_function(data, weights, clusters, mu, lambda)
-
-    print(paste("Indiv. update:", indiv_lap))
-    print(paste("Objective function:", round(obj_max, digits = 2)))
-
-    # If nothing is changing, stop
-    if(all(old_mu == mu)) break
-  }
-
+  
+  # Hard clusters from assign_frac
+  clusters <- apply(assign_frac, 1, which.max)
+  
+  # Cluster 99 is the outgroup
+  clusters <- ifelse(clusters == (k+1), 99, clusters)
+  
   # Return cluster allocation, cluster center and the current value of the objective function
   return(list(clusters = clusters, centers = mu, obj = obj_max))
 }
@@ -96,10 +61,10 @@ prob_clust_uniform <- function(data, weights, k, init_mu, L, U, lambda = NULL){
 #' Calculate the objective function value, given clusters and mu.
 #'
 #' @param data A matrix or data.frame containing the data.
-#' @param weights FIXME
+#' @param weights A vector of weights for each data point.
 #' @param clusters Current point allocation to clusters
 #' @param mu Parameters (locations) that define the k distributions.
-#' @param lambda FIXME
+#' @param lambda Outgroup-parameter.
 #' @return The value of the objective function.
 #' @keywords internal
 obj_function <- function(data, weights, clusters, mu, lambda){
@@ -167,6 +132,87 @@ prob_clust_parameter <- function(data_ew, clusters_ew, k){
 
   return(mu)
 }
+
+#' Update cluster allocations by maximizing the joint log-likelihood.
+#'
+#' @param data A matrix or data.frame containing the data, where each object is considered to be equally weighted.
+#' @param weights A vector of weights for each data point.
+#' @param mu The parameters (locations) that define the k distributions.
+#' @param k The number of clusters.
+#' @param L The lower limit for cluster sizes.
+#' @param U The upper limit for cluster sizes.
+#' @param lambda Outgroup-parameter
+#' @return New cluster allocations for each object in data and the maximum of the objective function.
+#' @keywords internal
+prob_clust_allocation_weights <- function(data, weights, mu, k, L, U, lambda){
+  
+  # Number of objects in data
+  n <- nrow(data)
+  
+  # Is there an outgroup cluster
+  is_outgroup <- !is.null(lambda)
+  
+  # Number of decision variables
+  n_decision <- ifelse(is_outgroup, n * k + n, n * k)
+  
+  # Matrix contains the log-likelihoods of the individual data points
+  C <- apply(mu, MARGIN = 1, FUN = mvtnorm::dmvnorm, x = data, sigma = diag(2), log = TRUE)
+  
+  # New linear program model object
+  lp1 <- lpSolveAPI::make.lp(nrow = 0, ncol = n_decision)
+  
+  # Maximizing the joint log-likelihood
+  lpSolveAPI::lp.control(lp1, sense = "max")
+  
+  # Binary integer problem
+  lpSolveAPI::set.type(lp1, 1:n_decision, "real")
+  
+  # Scaling the tuning parameter lambda
+  nu2 <- -(mean(stats::dist(data))/sqrt(k)) ^ 2
+  
+  # Objective function in the optimization problem
+  lpSolveAPI::set.objfn(lp1, c(C * weights, rep(nu2 * lambda, n) * weights))
+  
+  # Constraint 1: each point is assigned to exactly one cluster
+  for (i in 1:n) {
+    lpSolveAPI::add.constraint(lp1, c(as.numeric(rep(1:n == i, ifelse(is_outgroup, k + 1, k)))), "=", 1)
+  }
+  
+  # Constraint 2: each cluster size must be higher than L
+  temp <- c(t(matrix(1, ncol = n, nrow = k) * 1:k))
+  for (i in 1:k) {
+    lpSolveAPI::add.constraint(lp1, c(as.numeric(temp == i, n)*weights, rep(0, ifelse(is_outgroup, n, 0))), ">=", L)
+  }
+  
+  # Constraint 3: each cluster size must be lower than U
+  for (i in 1:k) {
+    lpSolveAPI::add.constraint(lp1, c(as.numeric(temp == i, n)*weights, rep(0, ifelse(is_outgroup, n, 0))), "<=", U)
+  }
+  
+  # Constraint 4: Each y_nk must be greater than or equal to 0
+  temp <- matrix(0, ncol = k, nrow = n)
+  for (i in 1:k) {
+    for (j in 1:n) {
+      temp[j,i] <- 1
+      lpSolveAPI::add.constraint(lp1, c(temp, rep(0, ifelse(is_outgroup, n, 0))), ">=", 0)
+      temp[j,i] <- 0
+    }
+  }
+  
+  # Solving the optimization problem
+  solve(lp1)
+  
+  # Maximum of the objective function
+  obj_max <- round(lpSolveAPI::get.objective(lp1), digits = 3)
+  
+  # Print the value of the objective function
+  print(paste("Value of the objective function:", obj_max))
+  
+  return(list(matrix(lpSolveAPI::get.variables(lp1)[1:n_decision], ncol = ifelse(is_outgroup, k + 1, k)),
+              obj_max))
+}
+
+
 
 #' Update cluster allocations by maximizing the joint log-likelihood.
 #'
@@ -330,6 +376,7 @@ prob_clust_allocation_indiv <- function(data, weights, clusters, mu, k, L, U, la
 
 }
 
+
 #' Updates the parameters (centers) for each cluster.
 #'
 #' @param data A data.frame containing the data points, one per row.
@@ -339,16 +386,16 @@ prob_clust_allocation_indiv <- function(data, weights, clusters, mu, k, L, U, la
 #' @return New cluster centers.
 #' @keywords internal
 prob_clust_parameter_weights <- function(data, clusters, weights, k){
-
+  
   # Matrix for cluster centers
   mu <- matrix(0, nrow = k, ncol = ncol(data))
-
+  
   # Update mu for each cluster
   for (i in 1:k) {
     # Weighted mean
-    mu[i,] <- colSums(data[clusters == i,] * weights[clusters == i]) / sum(weights[clusters == i])
+    mu[i,] <- colSums(data * weights * clusters[, i]) / sum(clusters[, i]*weights)
   }
-
+  
   return(mu)
 }
 
