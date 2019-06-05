@@ -12,6 +12,7 @@
 #' @param sigma Standard deviation of the normal prior.
 #' @param lambda Outgroup-parameter.
 #' @param divide_objects If TRUE, objects can be divided to multiple clusters
+#' @param use_gurobi If TRUE, gurobi solver will be used in the optimization task
 #' @return A list containting the new cluster allocations for each object in data,
 #' the new cluster center locations and maximum of the objective function.
 #' @export
@@ -24,7 +25,8 @@ prob_clust <- function(data,
                        range = NULL,
                        sigma = NULL,
                        lambda = NULL,
-                       divide_objects = FALSE) {
+                       divide_objects = FALSE,
+                       use_gurobi = TRUE) {
 
   # Check arguments
   assertthat::assert_that(is.matrix(data) || is.data.frame(data), msg = "data must be a matrix or a data.frame!")
@@ -45,6 +47,7 @@ prob_clust <- function(data,
   if(!purrr::is_null(lambda)) assertthat::is.number(lambda)
 
   assertthat::assert_that(is.logical(divide_objects), msg = "divide_objects must be TRUE or FALSE!")
+  assertthat::assert_that(is.logical(use_gurobi), msg = "use_gurobi must be TRUE or FALSE!")
 
   # Create initial values for mu, if init_mu is not defined
   if(is.null(init_mu)){
@@ -71,6 +74,19 @@ prob_clust <- function(data,
       U <- range[2]
     }
 
+    if(use_gurobi){
+      output_list <-
+        prob_clust_gurobi(
+          data = data,
+          weights = weights,
+          k = k,
+          init_mu = init_mu,
+          L = L, U = U,
+          d = d,
+          fixed_mu = fixed_mu,
+          lambda = lambda
+        )  
+    } else {
     # Call function prob_clust_simple
     output_list <-
       prob_clust_uniform(
@@ -79,9 +95,10 @@ prob_clust <- function(data,
         k = k,
         init_mu = init_mu,
         L = L, U = U,
+        d = d,
         lambda = lambda
       )
-
+    }
   } else if(prior_dist == "normal"){
 
     # Initializing sigma
