@@ -13,6 +13,17 @@ getmode <- function(v) {
   uniqv[which.max(tabulate(match(v, uniqv)))]
 }
 
+#' Calculate the limits for cluster sizes based on the mean
+#' @param data A data.frame
+#' @param k A number of clusters
+#' @param radius Width of the cluster size
+#' @export
+bounds <- function(data, k, radius = 100) {
+  mean_cluster_size <- sum(data$max_load) / k
+  return(data.frame(L = mean_cluster_size - radius,
+                    U = mean_cluster_size + radius))
+}
+
 #' Calculate the Euclidean distance between two points
 #' @param x1 1. point.
 #' @param x2 2. point.
