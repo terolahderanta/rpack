@@ -22,7 +22,8 @@ Imports:
     pracma,
     ggplot2,
     dplyr,
-    purrr
+    purrr,
+    gurobi
 Suggests:
     testthat,
     roxygen2,
