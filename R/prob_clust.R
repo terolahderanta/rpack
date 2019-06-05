@@ -5,6 +5,7 @@
 #' @param data A matrix or data.frame whose rows contain the objects to be clustered.
 #' @param weights A vector of weights for each data point. The weights will be rounded to nearest integers.
 #' @param k The number of clusters.
+#' @param d The distance function.
 #' @param init_mu A matrix whose rows indicate the initial cluster centers.
 #' @param prior_dist Prior distribution for cluster sizes. Possible values are "uniform" and "normal".
 #' @param range Range of the uniform prior distribution as a vector c(lower, upper).
@@ -17,6 +18,7 @@
 prob_clust <- function(data,
                        weights,
                        k,
+                       d = euc_dist2,
                        init_mu = NULL,
                        prior_dist = "uniform",
                        range = NULL,
