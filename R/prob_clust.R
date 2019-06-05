@@ -13,6 +13,7 @@
 #' @param lambda Outgroup-parameter.
 #' @param divide_objects If TRUE, objects can be divided to multiple clusters
 #' @param use_gurobi If TRUE, gurobi solver will be used in the optimization task
+#' @param fixed_mu Predetermined center locations.
 #' @return A list containting the new cluster allocations for each object in data,
 #' the new cluster center locations and maximum of the objective function.
 #' @export
@@ -26,7 +27,8 @@ prob_clust <- function(data,
                        sigma = NULL,
                        lambda = NULL,
                        divide_objects = FALSE,
-                       use_gurobi = TRUE) {
+                       use_gurobi = TRUE,
+                       fixed_mu = NULL) {
 
   # Check arguments
   assertthat::assert_that(is.matrix(data) || is.data.frame(data), msg = "data must be a matrix or a data.frame!")
