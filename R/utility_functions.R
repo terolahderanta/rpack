@@ -1,6 +1,6 @@
 c_col = c("blue","red","green","orange","hotpink","cyan","yellowgreen","purple",
-          "chocolate","darkgrey","darkred","yellow3","darkgreen","wheat3","magenta",
-          "palegreen2","violetred","seagreen2","tomato4","steelblue1","royalblue",
+          "chocolate","darkred","yellow3","darkgreen","bisque4","magenta",
+          "royalblue","tomato4","steelblue1",
           "seagreen4","orangered","darkblue","khaki3","lavender","deeppink2",
           "coral3","beige","brown4","indianred1","lightgreen","orchid")
 
@@ -12,6 +12,20 @@ getmode <- function(v) {
   uniqv <- unique(v)
   uniqv[which.max(tabulate(match(v, uniqv)))]
 }
+
+#' Calculate the Euclidean distance between two points
+#' @param x1 1. point.
+#' @param x2 2. point.
+#' @return The Eclidean distance.
+#' @export
+euc_dist <- function(x1, x2) sqrt(sum((x1 - x2) ^ 2))
+
+#' Calculate the squared Euclidean distance between two points
+#' @param x1 1. point.
+#' @param x2 2. point.
+#' @return The squared Eclidean distance.
+#' @export
+euc_dist2 <- function(x1, x2) sum((x1 - x2) ^ 2)
 
 #' Calculate the medoid of the data points
 #' @param data A data.frame.
