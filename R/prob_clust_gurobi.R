@@ -11,6 +11,7 @@
 #' @param L The lower limit for cluster sizes.
 #' @param U The upper limit for cluster sizes.
 #' @param d The distance function.
+#' @param fixed_mu Predetermined center locations.
 #' @param lambda Outgroup-parameter.
 #' @return A list containing cluster allocation, cluster center and the current value of the objective function.
 #' @keywords internal
@@ -165,6 +166,8 @@ prob_clust_allocation_weights_gurobi <- function(data, weights, mu, k, L, U, lam
 #' @param clusters A vector of cluster assignments for each data point.
 #' @param weights The weights of the data points
 #' @param k The number of clusters.
+#' @param fixed_mu Predetermined center locations.
+#' @param d The distance function.
 #' @return New cluster centers.
 #' @keywords internal
 prob_clust_parameter_weights_gurobi <- function(data, clusters, weights, k, fixed_mu = NULL, d = euc_dist2){
