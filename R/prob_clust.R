@@ -14,6 +14,7 @@
 #' @param divide_objects If TRUE, objects can be divided to multiple clusters
 #' @param use_gurobi If TRUE, gurobi solver will be used in the optimization task
 #' @param fixed_mu Predetermined center locations.
+#' @param frac_memb If TRUE memberships are fractional.
 #' @return A list containting the new cluster allocations for each object in data,
 #' the new cluster center locations and maximum of the objective function.
 #' @export
@@ -28,18 +29,19 @@ prob_clust <- function(data,
                        lambda = NULL,
                        divide_objects = FALSE,
                        use_gurobi = TRUE,
-                       fixed_mu = NULL) {
-
+                       fixed_mu = NULL,
+                       frac_memb = FALSE) {
+  
   # Check arguments
   assertthat::assert_that(is.matrix(data) || is.data.frame(data), msg = "data must be a matrix or a data.frame!")
   if (is.matrix(data)) data <- tibble::as_tibble(data)                   # convert to tibble for consistency
-
+  
   assertthat::assert_that(nrow(data) >= k, msg = "must have at least k data points!")
   assertthat::assert_that(is.numeric(weights), msg = "weight must be an numeric vector!")
   assertthat::assert_that(length(weights) == nrow(data), msg = "data and weight must have the same number of rows!")
   assertthat::assert_that(is.numeric(k), msg = "k must be a numeric scalar!")
   assertthat::assert_that(length(k) == 1, msg = "k must be a numeric scalar!")
-
+  
   if(!purrr::is_null(init_mu)) assertthat::assert_that(is.matrix(init_mu))
   if(!purrr::is_null(range)) {
     assertthat::assert_that(is.numeric(range))
@@ -47,26 +49,26 @@ prob_clust <- function(data,
   }
   if(!purrr::is_null(sigma)) assertthat::is.number(sigma)
   if(!purrr::is_null(lambda)) assertthat::is.number(lambda)
-
+  
   assertthat::assert_that(is.logical(divide_objects), msg = "divide_objects must be TRUE or FALSE!")
   assertthat::assert_that(is.logical(use_gurobi), msg = "use_gurobi must be TRUE or FALSE!")
-
+  
   # Create initial values for mu, if init_mu is not defined
   if(is.null(init_mu)){
     weighted_data <- apply(data, 2, function(x) rep(x, weights))  # replicate data points according to their weight
     init_kmpp <- kmpp(weighted_data, k)
     init_mu <- init_kmpp$centers
   }
-
+  
   # In case of uniform prior
   if(prior_dist == "uniform"){
     if(is.null(range)){
       # Mean for prior
       pr_mean <- round(sum(weights) / k)
-
+      
       # Width of uniform prior
       pr_width <- round(max(weights) * 2)
-
+      
       # Lower und upper limit for cluster size
       L <- (pr_mean - pr_width)
       U <- (pr_mean + pr_width)
@@ -75,7 +77,7 @@ prob_clust <- function(data,
       L <- range[1]
       U <- range[2]
     }
-
+    
     if(use_gurobi){
       output_list <-
         prob_clust_gurobi(
@@ -86,23 +88,24 @@ prob_clust <- function(data,
           L = L, U = U,
           d = d,
           fixed_mu = fixed_mu,
-          lambda = lambda
+          lambda = lambda,
+          frac_memb = frac_memb
         )  
     } else {
-    # Call function prob_clust_simple
-    output_list <-
-      prob_clust_uniform(
-        data = data,
-        weights = weights,
-        k = k,
-        init_mu = init_mu,
-        L = L, U = U,
-        d = d,
-        lambda = lambda
-      )
+      # Call function prob_clust_simple
+      output_list <-
+        prob_clust_uniform(
+          data = data,
+          weights = weights,
+          k = k,
+          init_mu = init_mu,
+          L = L, U = U,
+          d = d,
+          lambda = lambda
+        )
     }
   } else if(prior_dist == "normal"){
-
+    
     # Initializing sigma
     if(is.null(sigma)){
       sigma <- max(weights) / 2

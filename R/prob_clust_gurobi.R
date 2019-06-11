@@ -13,9 +13,10 @@
 #' @param d The distance function.
 #' @param fixed_mu Predetermined center locations.
 #' @param lambda Outgroup-parameter.
+#' @param frac_memb If TRUE memberships are fractional.
 #' @return A list containing cluster allocation, cluster center and the current value of the objective function.
 #' @keywords internal
-prob_clust_gurobi <- function(data, weights, k, init_mu, L, U, d = euc_dist2, fixed_mu = NULL, lambda = NULL){
+prob_clust_gurobi <- function(data, weights, k, init_mu, L, U, d = euc_dist2, fixed_mu = NULL, lambda = NULL, frac_memb = FALSE){
   
   # Number of objects in data
   n <- nrow(data)
@@ -45,7 +46,7 @@ prob_clust_gurobi <- function(data, weights, k, init_mu, L, U, d = euc_dist2, fi
     old_mu <- mu
     
     # Clusters in equally weighted data (Allocation-step)
-    temp_allocation <- prob_clust_allocation_weights_gurobi(data, weights, mu, k, L, U, lambda, d = d)
+    temp_allocation <- prob_clust_allocation_weights_gurobi(data, weights, mu, k, L, U, lambda, d = d, frac_memb = frac_memb)
     assign_frac <- temp_allocation[[1]]
     obj_max <- temp_allocation[[2]]
     
@@ -65,7 +66,7 @@ prob_clust_gurobi <- function(data, weights, k, init_mu, L, U, d = euc_dist2, fi
   clusters <- ifelse(clusters == (k+1), 99, clusters)
   
   # Return cluster allocation, cluster center and the current value of the objective function
-  return(list(clusters = clusters, centers = mu, obj = obj_max))
+  return(list(clusters = clusters, centers = mu, obj = obj_max, assign_frac = assign_frac))
 }
 
 #' Update cluster allocations by maximizing the joint log-likelihood.
@@ -77,9 +78,10 @@ prob_clust_gurobi <- function(data, weights, k, init_mu, L, U, d = euc_dist2, fi
 #' @param L The lower limit for cluster sizes.
 #' @param U The upper limit for cluster sizes.
 #' @param lambda Outgroup-parameter
+#' @param frac_memb If TRUE memberships are fractional.
 #' @return New cluster allocations for each object in data and the maximum of the objective function.
 #' @keywords internal
-prob_clust_allocation_weights_gurobi <- function(data, weights, mu, k, L, U, lambda, d = euc_dist2){
+prob_clust_allocation_weights_gurobi <- function(data, weights, mu, k, L, U, lambda, d = euc_dist2, frac_memb = FALSE){
   
   # Number of objects in data
   n <- nrow(data)
@@ -137,12 +139,17 @@ prob_clust_allocation_weights_gurobi <- function(data, weights, mu, k, L, U, lam
                         rep('>', k), 
                         rep('<', k))
   
-  model$vtype      <- 'B'
+  # B = Binary, C = Continuous
   
-  #params <- list(OutputFlag=0)
+  
+  model$vtype      <- ifelse(frac_memb, 'C', 'B')
+  
+  # Using timelimit-parameter to stop the optimization if time exceeds 10 minutes
+  params <- list()
+  params$TimeLimit <- 600
   
   # Solving the linear program
-  result <- gurobi(model, params = NULL)
+  result <- gurobi(model, params = params)
   
   assign_frac <- matrix(print(result$x), ncol = ifelse(is_outgroup, k + 1, k))
   
