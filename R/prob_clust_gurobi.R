@@ -147,6 +147,7 @@ prob_clust_allocation_weights_gurobi <- function(data, weights, mu, k, L, U, lam
   # Using timelimit-parameter to stop the optimization if time exceeds 10 minutes
   params <- list()
   params$TimeLimit <- 600
+  params$OutputFlag <- 0
   
   # Solving the linear program
   result <- gurobi(model, params = params)

@@ -110,19 +110,19 @@ prob_clust <- function(data,
     if(is.null(sigma)){
       sigma <- max(weights) / 2
     }
-
+    
     # Mean of the normal
     pr_mean <- round(sum(weights) / k)
-
+    
     # Max width for prior
     pr_width <- round(sigma * 4)
-
+    
     # All possible cluster sizes
     cl_size <- (pr_mean - pr_width):(pr_mean + pr_width)
-
+    
     # Normal prior probabilities
     prob <- stats::dnorm(cl_size, mean = pr_mean, sd = sigma)
-
+    
     # Call function prob_clust_prior
     output_list <-
       prob_clust_prior(
@@ -134,10 +134,10 @@ prob_clust <- function(data,
         prior_prob = prob,
         divide_objects = divide_objects
       )
-
+    
   } else {
     stop("prior_dist must be 'uniform' or 'normal'.")
   }
-
+  
   return(output_list)
 }
