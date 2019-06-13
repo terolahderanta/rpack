@@ -166,9 +166,15 @@ kmpp <- function(X, k) {
     pr <- apply(dm, 1, min)
     C[i] <- sample(1:n, 1, prob = pr)
   }
-
-  cl <- stats::kmeans(X, X[C, ])
-  cl$initial_centers <- X[C,]
+  
+  if(length(unique(C)) == k){
+    cl <- stats::kmeans(X, X[C, ])  
+    cl$initial_centers <- X[C,]
+  } else {
+    cl <- kmpp(X, k)
+  }
+  #cl <- stats::kmeans(X, X[C, ])
+  #cl$initial_centers <- X[C,]
 
   return(cl)
 }
