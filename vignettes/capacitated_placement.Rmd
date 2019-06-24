@@ -1,10 +1,10 @@
 ---
-title: "Probabilistic Clustering"
+title: "Capacitated Placement"
 author: "Tero Lähderanta, Lauri Lovén"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Probabilistic Clustering}
+  %\VignetteIndexEntry{Capacitated Placement}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -18,15 +18,15 @@ knitr::opts_chunk$set(
 )
 ```
 
-This vignette provides a tutorial on main functionality of the `pclustr` package.
+This vignette provides a tutorial on main functionality of the `rpack` package.
 
 ## Libraries
 
-First, load the necessary libraries. In addition to the `pclustr` package, we use 
+First, load the necessary libraries. In addition to the `rpack` package, we use 
 `tidyverse` and `dplyr` for sample data manipulation and  `ggplot2` for plotting.
 
 ```{r, echo=TRUE, results='hide', message=FALSE, warning=FALSE}
-library(pclustr)
+library(rpack)
 library(tidyverse)
 library(dplyr)
 library(ggplot2)
