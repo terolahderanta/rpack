@@ -4,7 +4,8 @@ Title: Capacitated placement
 Version: 0.0.0.9000
 Authors@R: c(
   person("Tero", "Lähderanta", email = "tero.lahderanta@oulu.fi", role = c("aut", "cre")),
-  person("Lauri", "Lovén", email = "lauri.loven@gmail.com", role = c("aut")))
+  person("Lauri", "Lovén", email = "lauri.loven@gmail.com", role = c("aut")),
+  person("Leena", "Ruha", email = "leena.ruha@oulu.fi", role = c("aut"))))
 Description: rpack is a package for placement with capacitated k-family.
 License: GPL-3
 Encoding: UTF-8
