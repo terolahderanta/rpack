@@ -215,8 +215,9 @@ prob_clust_allocation_weights <- function(data, weights, mu, k, L, U, lambda, d 
   }
   
   # Solving the optimization problem
-  lpSolveAPI::solve(lp1)
-  
+  #lpSolveAPI::solve(lp1)
+  solve(lp1)
+
   # Maximum/minimum of the objective function
   obj_max <- round(lpSolveAPI::get.objective(lp1), digits = 3)
   
