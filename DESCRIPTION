@@ -22,12 +22,12 @@ Imports:
     pracma,
     ggplot2,
     dplyr,
-    purrr,
-    gurobi
+    purrr
 Suggests:
     testthat,
     roxygen2,
     knitr,
-    rmarkdown
+    rmarkdown,
+    gurobi
 RoxygenNote: 6.1.1
 VignetteBuilder: knitr
