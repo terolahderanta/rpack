@@ -21,7 +21,7 @@ test_that("simple cases work", {
         weights = c(1, 2),
         k = 2
       )
-    ) == 3
+    ) == 4
   )
 
   expect_true(
@@ -31,7 +31,7 @@ test_that("simple cases work", {
         weights = c(1, 2, 1),
         k = 2
       )
-    ) == 3
+    ) == 4
   )
 
 })
