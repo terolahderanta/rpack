@@ -1,4 +1,4 @@
 library(testthat)
-library(pclustr)
+library(rpack)
 
-test_check("pclustr")
+test_check("rpack")
