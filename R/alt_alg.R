@@ -6,6 +6,7 @@
 #' @param N Number of iterations.
 #' @param limits Limits for the cluster size in a list.
 #' @param d Distance function used in clustering.
+#' @param lambda Outgroup parameter.
 #' @param frac_memb Can points be partially allocated?
 #' @param place_to_AP Place the cluster head in a point?
 #' @param fixed_mu Possible fixed center locations.
@@ -14,7 +15,7 @@
 #' @export
 #'
 #' @examples
-alt_alg <- function(coord, weights, k, N = 10, limits = bounds(data, k, radius = 100), d = euc_dist2, frac_memb = FALSE, place_to_AP = TRUE, fixed_mu = NULL){
+alt_alg <- function(coord, weights, k, N = 10, limits = bounds(data, k, radius = 100), d = euc_dist2, lambda = NULL, frac_memb = FALSE, place_to_AP = TRUE, fixed_mu = NULL){
   
   if(N < 2){
     N <- 2
