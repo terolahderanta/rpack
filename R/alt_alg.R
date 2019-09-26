@@ -28,6 +28,7 @@ alt_alg <- function(coord, weights, k, N = 10, limits = bounds(data, k, radius =
                      k = k,
                      prior_dist = "uniform",
                      range = c(limits$L, limits$U),
+                     lambda = lambda,
                      d = d,
                      frac_memb = frac_memb,
                      fixed_mu = fixed_mu)
@@ -45,6 +46,7 @@ alt_alg <- function(coord, weights, k, N = 10, limits = bounds(data, k, radius =
                        k = k,
                        prior_dist = "uniform",
                        range = c(limits$L, limits$U),
+                       lambda = lambda,
                        d = d,
                        frac_memb = frac_memb,
                        fixed_mu = fixed_mu)
