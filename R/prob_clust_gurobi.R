@@ -46,12 +46,12 @@ prob_clust_gurobi <- function(data, weights, k, init_mu, L, U, d = euc_dist2, fi
     old_mu <- mu
     
     # Clusters in equally weighted data (Allocation-step)
-    temp_allocation <- prob_clust_allocation_weights_gurobi(data, weights, mu, k, L, U, lambda, d = d, frac_memb = frac_memb)
+    temp_allocation <- allocation_gurobi(data, weights, mu, k, L, U, lambda, d = d, frac_memb = frac_memb)
     assign_frac <- temp_allocation[[1]]
     obj_max <- temp_allocation[[2]]
     
     # Updating cluster centers (Parameter-step)
-    mu <- prob_clust_parameter_weights_gurobi(data, assign_frac, weights, k, fixed_mu, d = d)
+    mu <- location_gurobi(data, assign_frac, weights, k, fixed_mu, d = d)
     
     print(paste("Iteration:",iter))
     
@@ -81,7 +81,7 @@ prob_clust_gurobi <- function(data, weights, k, init_mu, L, U, d = euc_dist2, fi
 #' @param frac_memb If TRUE memberships are fractional.
 #' @return New cluster allocations for each object in data and the maximum of the objective function.
 #' @keywords internal
-prob_clust_allocation_weights_gurobi <- function(data, weights, mu, k, L, U, lambda, d = euc_dist2, frac_memb = FALSE){
+allocation_gurobi <- function(data, weights, mu, k, L, U, lambda, d = euc_dist2, frac_memb = FALSE){
   
   # Number of objects in data
   n <- nrow(data)
@@ -178,7 +178,7 @@ prob_clust_allocation_weights_gurobi <- function(data, weights, mu, k, L, U, lam
 #' @param d The distance function.
 #' @return New cluster centers.
 #' @keywords internal
-prob_clust_parameter_weights_gurobi <- function(data, clusters, weights, k, fixed_mu = NULL, d = euc_dist2){
+location_gurobi <- function(data, clusters, weights, k, fixed_mu = NULL, d = euc_dist2){
   
   # Matrix for cluster centers
   mu <- matrix(0, nrow = k, ncol = ncol(data))
