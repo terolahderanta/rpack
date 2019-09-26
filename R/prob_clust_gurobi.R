@@ -46,7 +46,15 @@ prob_clust_gurobi <- function(data, weights, k, init_mu, L, U, d = euc_dist2, fi
     old_mu <- mu
     
     # Clusters in equally weighted data (Allocation-step)
-    temp_allocation <- allocation_gurobi(data, weights, mu, k, L, U, lambda, d = d, frac_memb = frac_memb)
+    temp_allocation <- allocation_gurobi(data = data,
+                                         weights = weights,
+                                         mu = mu, 
+                                         k = k,
+                                         L = L,
+                                         U = U,
+                                         lambda = lambda,
+                                         d = d,
+                                         frac_memb = frac_memb)
     assign_frac <- temp_allocation[[1]]
     obj_max <- temp_allocation[[2]]
     
@@ -78,10 +86,11 @@ prob_clust_gurobi <- function(data, weights, k, init_mu, L, U, d = euc_dist2, fi
 #' @param L The lower limit for cluster sizes.
 #' @param U The upper limit for cluster sizes.
 #' @param lambda Outgroup-parameter
+#' @param d Distance function.
 #' @param frac_memb If TRUE memberships are fractional.
 #' @return New cluster allocations for each object in data and the maximum of the objective function.
 #' @keywords internal
-allocation_gurobi <- function(data, weights, mu, k, L, U, lambda, d = euc_dist2, frac_memb = FALSE){
+allocation_gurobi <- function(data, weights, mu, k, L, U, lambda = NULL, d = euc_dist2, frac_memb = FALSE){
   
   # Number of objects in data
   n <- nrow(data)
@@ -91,9 +100,6 @@ allocation_gurobi <- function(data, weights, mu, k, L, U, lambda, d = euc_dist2,
   
   # Number of decision variables
   n_decision <- ifelse(is_outgroup, n * k + n, n * k)
-  
-  # Matrix contains the log-likelihoods of the individual data points
-  #C <- apply(mu, MARGIN = 1, FUN = mvtnorm::dmvnorm, x = data, sigma = diag(2), log = TRUE)
   
   C <- matrix(0, ncol = k, nrow = n)
   # TODO: Tähän tilalle muita keinoja mitata etäisyyttä
