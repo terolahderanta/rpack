@@ -127,13 +127,19 @@ allocation_gurobi <- function(data, weights, mu, k, L, U, lambda = NULL, d = euc
   model <- list()
   
   # Constraint matrix A
-  # TODO: Use sparse matrix (function spMatrix)!!!!
   model$A          <- matrix(c(const1, const2, const3), 
                              nrow=n + 2*k, 
                              ncol=n_decision, 
                              byrow=T)
   
-  model$obj        <- c(C * weights)
+  # TODO: Add outgroup penalty to this
+  if(is_outgroup){
+    obj_fn <- c(c(C * weights), lambda * weights)
+  } else {
+    obj_fn <- c(C * weights) 
+  }
+  
+  model$obj        <- obj_fn
   
   model$modelsense <- 'min'
   
