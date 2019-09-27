@@ -4,7 +4,7 @@
 #' @param weights Weights of the points in a vector.
 #' @param k Number of clusters.
 #' @param N Number of iterations.
-#' @param limits Limits for the cluster size in a list.
+#' @param range Limits for the cluster size in a list.
 #' @param d Distance function used in clustering.
 #' @param lambda Outgroup parameter.
 #' @param frac_memb Can points be partially allocated?
@@ -15,7 +15,7 @@
 #' @export
 #'
 #' @examples
-alt_alg <- function(coord, weights, k, N = 10, limits = bounds(data, k, radius = 100), d = euc_dist2, lambda = NULL, frac_memb = FALSE, place_to_point = TRUE, fixed_mu = NULL){
+alt_alg <- function(coord, weights, k, N = 10, range = bounds(data, k, radius = 100), d = euc_dist2, lambda = NULL, frac_memb = FALSE, place_to_point = TRUE, fixed_mu = NULL){
   
   if(N < 2){
     N <- 2
@@ -27,7 +27,7 @@ alt_alg <- function(coord, weights, k, N = 10, limits = bounds(data, k, radius =
                      weights = w,
                      k = k,
                      prior_dist = "uniform",
-                     range = c(limits$L, limits$U),
+                     range = c(range[1], range[2]),
                      lambda = lambda,
                      d = d,
                      place_to_point = place_to_point,
@@ -46,7 +46,7 @@ alt_alg <- function(coord, weights, k, N = 10, limits = bounds(data, k, radius =
                        weights = w,
                        k = k,
                        prior_dist = "uniform",
-                       range = c(limits$L, limits$U),
+                       range = c(range[1], range[2]),
                        lambda = lambda,
                        d = d,
                        place_to_point = place_to_point,
