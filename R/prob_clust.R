@@ -13,6 +13,7 @@
 #' @param lambda Outgroup-parameter.
 #' @param divide_objects If TRUE, objects can be divided to multiple clusters
 #' @param use_gurobi If TRUE, gurobi solver will be used in the optimization task
+#' @param place_to_point if TRUE, cluster centers will be placed to a point.
 #' @param fixed_mu Predetermined center locations.
 #' @param frac_memb If TRUE memberships are fractional.
 #' @return A list containting the new cluster allocations for each object in data,
@@ -29,6 +30,7 @@ prob_clust <- function(data,
                        lambda = NULL,
                        divide_objects = FALSE,
                        use_gurobi = TRUE,
+                       place_to_point = TRUE,
                        fixed_mu = NULL,
                        frac_memb = FALSE) {
   
@@ -89,6 +91,7 @@ prob_clust <- function(data,
           d = d,
           fixed_mu = fixed_mu,
           lambda = lambda,
+          place_to_point = place_to_point,
           frac_memb = frac_memb
         )  
     } else {

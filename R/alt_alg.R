@@ -8,14 +8,14 @@
 #' @param d Distance function used in clustering.
 #' @param lambda Outgroup parameter.
 #' @param frac_memb Can points be partially allocated?
-#' @param place_to_AP Place the cluster head in a point?
+#' @param place_to_point Place the cluster head in a point?
 #' @param fixed_mu Possible fixed center locations.
 #'
 #' @return Clustering object with allocation, center locations and the value of the objective function
 #' @export
 #'
 #' @examples
-alt_alg <- function(coord, weights, k, N = 10, limits = bounds(data, k, radius = 100), d = euc_dist2, lambda = NULL, frac_memb = FALSE, place_to_AP = TRUE, fixed_mu = NULL){
+alt_alg <- function(coord, weights, k, N = 10, limits = bounds(data, k, radius = 100), d = euc_dist2, lambda = NULL, frac_memb = FALSE, place_to_point = TRUE, fixed_mu = NULL){
   
   if(N < 2){
     N <- 2
@@ -30,6 +30,7 @@ alt_alg <- function(coord, weights, k, N = 10, limits = bounds(data, k, radius =
                      range = c(limits$L, limits$U),
                      lambda = lambda,
                      d = d,
+                     place_to_point = place_to_point,
                      frac_memb = frac_memb,
                      fixed_mu = fixed_mu)
   # Print the number of completed laps
@@ -48,6 +49,7 @@ alt_alg <- function(coord, weights, k, N = 10, limits = bounds(data, k, radius =
                        range = c(limits$L, limits$U),
                        lambda = lambda,
                        d = d,
+                       place_to_point = place_to_point,
                        frac_memb = frac_memb,
                        fixed_mu = fixed_mu)
     

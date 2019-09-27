@@ -13,10 +13,11 @@
 #' @param d The distance function.
 #' @param fixed_mu Predetermined center locations.
 #' @param lambda Outgroup-parameter.
+#' @param place_to_point if TRUE, cluster centers will be placed to a point.
 #' @param frac_memb If TRUE memberships are fractional.
 #' @return A list containing cluster allocation, cluster center and the current value of the objective function.
 #' @keywords internal
-prob_clust_gurobi <- function(data, weights, k, init_mu, L, U, d = euc_dist2, fixed_mu = NULL, lambda = NULL, frac_memb = FALSE){
+prob_clust_gurobi <- function(data, weights, k, init_mu, L, U, d = euc_dist2, fixed_mu = NULL, lambda = NULL, place_to_point = TRUE, frac_memb = FALSE){
   
   # Number of objects in data
   n <- nrow(data)
@@ -59,7 +60,13 @@ prob_clust_gurobi <- function(data, weights, k, init_mu, L, U, d = euc_dist2, fi
     obj_max <- temp_allocation[[2]]
     
     # Updating cluster centers (Parameter-step)
-    mu <- location_gurobi(data, assign_frac, weights, k, fixed_mu, d = d)
+    mu <- location_gurobi(data = data,
+                          assign_frac = assign_frac,
+                          weights = weights,
+                          k = k,
+                          fixed_mu = fixed_mu,
+                          d = d,
+                          place_to_point = place_to_point)
     
     print(paste("Iteration:",iter))
     
@@ -193,14 +200,15 @@ allocation_gurobi <- function(data, weights, mu, k, L, U, lambda = NULL, d = euc
 #' Updates the parameters (centers) for each cluster.
 #'
 #' @param data A data.frame containing the data points, one per row.
-#' @param clusters A vector of cluster assignments for each data point.
+#' @param assign_frac A vector of cluster assignments for each data point.
 #' @param weights The weights of the data points
 #' @param k The number of clusters.
 #' @param fixed_mu Predetermined center locations.
 #' @param d The distance function.
+#' @param place_to_point if TRUE, cluster centers will be placed to a point.
 #' @return New cluster centers.
 #' @keywords internal
-location_gurobi <- function(data, clusters, weights, k, fixed_mu = NULL, d = euc_dist2){
+location_gurobi <- function(data, assign_frac, weights, k, fixed_mu = NULL, d = euc_dist2, place_to_point = TRUE){
   
   # Matrix for cluster centers
   mu <- matrix(0, nrow = k, ncol = ncol(data))
@@ -217,17 +225,20 @@ location_gurobi <- function(data, clusters, weights, k, fixed_mu = NULL, d = euc
   
   # Update mu for each cluster
   for (i in (ifelse(n_fixed > 0, n_fixed + 1, 1)):k) {
-    # Weighted mean
-    #mu[i,] <- colSums(data * weights * clusters[, i]) / sum(clusters[, i]*weights)
     
-    # Compute medoids only with points that are relevant in the cluster i
-    relevant_cl <- clusters[, i] > 0.001
-    
-    # Computing medoids for cluster i
-    #   New weights are combined from assignment fractionals and weights
-    mu[i,] <- as.matrix(medoid(data = data[relevant_cl,],
-                               w = clusters[relevant_cl, i] * weights[relevant_cl],
-                               d = d))
+    if(place_to_point){
+      # Compute medoids only with points that are relevant in the cluster i
+      relevant_cl <- assign_frac[, i] > 0.001
+      
+      # Computing medoids for cluster i
+      #   New weights are combined from assignment fractionals and weights
+      mu[i,] <- as.matrix(medoid(data = data[relevant_cl,],
+                                 w = assign_frac[relevant_cl, i] * weights[relevant_cl],
+                                 d = d))
+    } else {
+      # Weighted mean
+      mu[i,] <- colSums(data * weights * assign_frac[, i]) / sum(assign_frac[, i]*weights)
+    }
   }
   
   
