@@ -107,6 +107,14 @@ allocation_gurobi <- function(data, weights, mu, k, L, U, lambda = NULL, d = euc
     C[,i] <- apply(data, MARGIN = 1, FUN = d, x2 = mu[i,])
   }
   
+  # Normalization
+  C <- (C - min(C))/(max(C)- min(C))
+  max_w <- max(weights)
+  weights <- weights/max_w
+  L <- L/max_w
+  U <- U/max_w
+  
+  
   # First constraint
   const1 <- NULL
   for (i in 1:n) {
@@ -134,7 +142,9 @@ allocation_gurobi <- function(data, weights, mu, k, L, U, lambda = NULL, d = euc
   
   # TODO: Add outgroup penalty to this
   if(is_outgroup){
-    obj_fn <- c(c(C * weights), lambda * weights)
+    nu <- mean(C)
+    #obj_fn <- c(c(C * weights), lambda * weights)
+    obj_fn <- c(c(C * weights), lambda * rep(1,n))
   } else {
     obj_fn <- c(C * weights) 
   }
