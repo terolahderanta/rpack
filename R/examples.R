@@ -53,7 +53,7 @@ demo_prob_cluster_uniform <- function() {
   k <- 10
 
   # Initial mu with k-means
-  test_dat <- get_testdata_1000()
+  test_dat <- get_testdata_200()
   init_kmpp <- kmpp(cbind(rep(test_dat$x, test_dat$w),
                           rep(test_dat$y, test_dat$w)),
                     k)
@@ -111,7 +111,7 @@ demo_prob_cluster_normal <- function() {
   k <- 5
 
   # Initial mu with k-means
-  test_dat <- get_testdata_1000()
+  test_dat <- get_testdata_200()
   init_kmpp <- kmpp(cbind(rep(test_dat$x,
                               test_dat$w),
                           rep(test_dat$y,
