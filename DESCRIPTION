@@ -22,6 +22,7 @@ Imports:
     pracma,
     ggplot2,
     dplyr,
+    rmutil,
     purrr
 Suggests:
     testthat,
