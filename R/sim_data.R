@@ -36,7 +36,7 @@ simulate_data <- function(n, w_dist_params = c(1, 100), coord_dist = "uniform", 
 random_sigma <- function(no_corr = TRUE){
   
   if(no_corr){
-    r_diag <- runif(1, min = 1, max = 2)
+    r_diag <- runif(1, min = 1, max = 1.5)
     Sigma <- diag(x = rep(r_diag, 2))
     
   } else {
