@@ -23,7 +23,8 @@ Imports:
     ggplot2,
     dplyr,
     rmutil,
-    purrr
+    purrr,
+    MASS
 Suggests:
     testthat,
     roxygen2,
