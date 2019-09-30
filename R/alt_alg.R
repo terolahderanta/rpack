@@ -1,6 +1,6 @@
 #' Full alternating algorithm
 #'
-#' @param coord The coordinates data.
+#' @param coords Coordinates of the data points.
 #' @param weights Weights of the points in a vector.
 #' @param k Number of clusters.
 #' @param N Number of iterations.
@@ -15,7 +15,7 @@
 #' @export
 #'
 #' @examples
-alt_alg <- function(coord, weights, k, N = 10, range = bounds(data, k, radius = 100), d = euc_dist2, lambda = NULL, frac_memb = FALSE, place_to_point = TRUE, fixed_mu = NULL){
+alt_alg <- function(coords, weights, k, N = 10, range = bounds(data, k, radius = 100), d = euc_dist2, lambda = NULL, frac_memb = FALSE, place_to_point = TRUE, fixed_mu = NULL){
   
   if(N < 2){
     N <- 2
@@ -23,7 +23,7 @@ alt_alg <- function(coord, weights, k, N = 10, range = bounds(data, k, radius = 
   
   w <- weights
   # Call prob_clust function
-  temp <- prob_clust(data = coord,
+  temp <- prob_clust(data = coords,
                      weights = w,
                      k = k,
                      prior_dist = "uniform",
@@ -42,7 +42,7 @@ alt_alg <- function(coord, weights, k, N = 10, range = bounds(data, k, radius = 
   min_obj <- temp$obj
   best_temp <- temp
   for (i in 2:N) {
-    temp <- prob_clust(data = coord,
+    temp <- prob_clust(data = coords,
                        weights = w,
                        k = k,
                        prior_dist = "uniform",
