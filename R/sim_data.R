@@ -11,8 +11,8 @@
 #' @examples
 simulate_data <- function(n, w_dist_params = c(1, 100), coord_dist = "uniform", w_dist = "uniform") {
   
-  x <- switch(coord_dist, "uniform" = runif(n), "normal" = rnorm(n), "laplace" = rlaplace(n)) 
-  y <- switch(coord_dist, "uniform" = runif(n), "normal" = rnorm(n), "laplace" = rlaplace(n)) 
+  x <- switch(coord_dist, "uniform" = runif(n), "normal" = rnorm(n), "laplace" = rmutil::rlaplace(n)) 
+  y <- switch(coord_dist, "uniform" = runif(n), "normal" = rnorm(n), "laplace" = rmutil::rlaplace(n)) 
   w <- switch(w_dist,
               "uniform" = floor(runif(n, min = w_dist_params[1], max = w_dist_params[2] + 1)),
               "normal" = c(round(rnorm(n, mean = w_dist_params[1], sd = w_dist_params[2]))))
@@ -68,12 +68,12 @@ simulate_normal_mixed <- function(n, k, w_dist_params = c(1, 100), w_dist = "uni
   mu <- matrix(runif(2 * k, min = -10, max = 10), ncol = 2, nrow = k)
   
   # Sigmas for the normal distributions
-  coords <- mvrnorm(n = n_sub,
+  coords <- MASS::mvrnorm(n = n_sub,
                     mu = mu[1,],
                     Sigma = random_sigma())
   orig_group <- rep(1, n_sub)
   for (i in 2:k) {
-    coords <- rbind(coords, mvrnorm(n = n_sub,
+    coords <- rbind(coords, MASS::mvrnorm(n = n_sub,
                                     mu = mu[i,],
                                     Sigma =  random_sigma()))
     orig_group <- c(orig_group, rep(i, n_sub))
@@ -108,12 +108,12 @@ simulate_laplace_mixed <- function(n, k, w_dist_params = c(1, 100), w_dist = "un
   mu <- matrix(runif(2 * k, min = -10, max = 10), ncol = 2, nrow = k)
   
   # Sigmas for the normal distributions
-  coords <- rmvl(n = n_sub,
+  coords <- LaplacesDemon::rmvl(n = n_sub,
                     mu = mu[1,],
                     Sigma = random_sigma())
   orig_group <- rep(1, n_sub)
   for (i in 2:k) {
-    coords <- rbind(coords, rmvl(n = n_sub,
+    coords <- rbind(coords, LaplacesDemon::rmvl(n = n_sub,
                                     mu = mu[i,],
                                     Sigma =  random_sigma()))
     orig_group <- c(orig_group, rep(i, n_sub))

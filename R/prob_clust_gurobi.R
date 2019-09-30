@@ -179,7 +179,7 @@ allocation_gurobi <- function(data, weights, mu, k, L, U, lambda = NULL, d = euc
   params$OutputFlag <- 0
   
   # Solving the linear program
-  result <- gurobi(model, params = params)
+  result <- gurobi::gurobi(model, params = params)
   
   assign_frac <- matrix(print(result$x), ncol = ifelse(is_outgroup, k + 1, k))
   
