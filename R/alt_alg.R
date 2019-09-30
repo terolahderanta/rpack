@@ -6,6 +6,7 @@
 #' @param N Number of iterations.
 #' @param range Limits for the cluster size in a list.
 #' @param d Distance function used in clustering.
+#' @param mu_initialization Method to initialize mu, default is kmpp.
 #' @param lambda Outgroup parameter.
 #' @param frac_memb Can points be partially allocated?
 #' @param place_to_point Place the cluster head in a point?
@@ -15,13 +16,27 @@
 #' @export
 #'
 #' @examples
-alt_alg <- function(coords, weights, k, N = 10, range = bounds(data, k, radius = 100), d = euc_dist2, lambda = NULL, frac_memb = FALSE, place_to_point = TRUE, fixed_mu = NULL){
+alt_alg <- function(coords, weights, k, N = 10, range = as.numeric(bounds(weights, k, radius = 100)),
+                    d = euc_dist2, mu_initialization = NULL, lambda = NULL, frac_memb = FALSE,
+                    place_to_point = TRUE, fixed_mu = NULL){
   
   if(N < 2){
     N <- 2
   }
   
   w <- weights
+  
+  if(mu_initialization == "random"){
+    init_mu <- list()
+    for (i in 1:N) {
+      init_mu[[i]] <- as.matrix(coords[sample(x = 1:nrow(coords), size = k),])
+    }
+    
+  } else {
+    init_mu <-  NULL
+    
+  }
+  
   # Call prob_clust function
   temp <- prob_clust(data = coords,
                      weights = w,
@@ -30,6 +45,7 @@ alt_alg <- function(coords, weights, k, N = 10, range = bounds(data, k, radius =
                      range = c(range[1], range[2]),
                      lambda = lambda,
                      d = d,
+                     init_mu = init_mu[[1]],
                      place_to_point = place_to_point,
                      frac_memb = frac_memb,
                      fixed_mu = fixed_mu)
@@ -49,6 +65,7 @@ alt_alg <- function(coords, weights, k, N = 10, range = bounds(data, k, radius =
                        range = c(range[1], range[2]),
                        lambda = lambda,
                        d = d,
+                       init_mu = init_mu[[i]],
                        place_to_point = place_to_point,
                        frac_memb = frac_memb,
                        fixed_mu = fixed_mu)
