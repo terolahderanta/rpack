@@ -25,16 +25,17 @@ alt_alg <- function(coords, weights, k, N = 10, range = as.numeric(bounds(weight
   }
   
   w <- weights
-  
-  if(mu_initialization == "random"){
+  if(is.null(mu_initialization)){
+    init_mu <- NULL
+    
+  } else if(mu_initialization == "random"){
     init_mu <- list()
     for (i in 1:N) {
       init_mu[[i]] <- as.matrix(coords[sample(x = 1:nrow(coords), size = k),])
     }
     
   } else {
-    init_mu <-  NULL
-    
+    init_mu <- NULL
   }
   
   # Call prob_clust function
