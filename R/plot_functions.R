@@ -49,8 +49,8 @@ plot_clusters <- function(coords, weights, clusters, mu, title = "", subtitle = 
       )
     ) +
     ggplot2::labs(                          # Labels for axis and title
-      x = "x1",
-      y = "x2",
+      x = "x",
+      y = "y",
       title = title,
       subtitle = subtitle
     ) +
