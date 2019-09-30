@@ -1,13 +1,16 @@
 #' Plot the clusters.
-#' @param x x-coordinates.
-#' @param y y-coordinates.
+#' @param coords Coordinates of the data points.
 #' @param weights The weigths of the objects in data.
 #' @param clusters A vector of cluster assignments for each data point.
 #' @param mu The parameters (locations) that define the k distributions.
 #' @param title Set the title of the plot.
 #' @param subtitle Set the subtitle of the plot.
 #' @export
-plot_clusters <- function(x, y, weights, clusters, mu, title = "", subtitle = NULL){
+plot_clusters <- function(coords, weights, clusters, mu, title = "", subtitle = NULL){
+  
+  # x and y coordinates
+  x <- coords[,1]
+  y <- coords[,2]
   
   # The number of clusters
   k <- nrow(mu)
