@@ -74,8 +74,8 @@ alt_alg <- function(coords, weights, k, N = 10, range = as.numeric(bounds(weight
     
     # Print the number of completed laps
     if(floor((i/N)*30) > progress_bar){
+      cat(paste0(rep("#", floor((i/N)*30) - progress_bar), collapse = ""))  
       progress_bar <- floor((i/N)*30)
-      cat(paste("#", sep = ""))  
     }
     
     # Save the iteration with the lowest value of objective function
@@ -84,5 +84,6 @@ alt_alg <- function(coords, weights, k, N = 10, range = as.numeric(bounds(weight
       best_temp <-  temp
     }
   }
+  cat("\n")
   return(best_temp)
 }
