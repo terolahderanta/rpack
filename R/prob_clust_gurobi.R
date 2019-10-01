@@ -186,7 +186,7 @@ allocation_gurobi <- function(data, weights, mu, k, L, U, lambda = NULL, d = euc
   
   #assign_frac <- matrix(print(result$x), ncol = ifelse(is_outgroup, k + 1, k))
   
-  assign_frac <- matrix(print(result$x), ncol = ifelse(is_outgroup, k + 1, k))
+  assign_frac <- matrix((result$x), ncol = ifelse(is_outgroup, k + 1, k))
   
   obj_max <- round(result$objval, digits = 3)
   
