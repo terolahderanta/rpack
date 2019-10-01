@@ -151,10 +151,10 @@ allocation_gurobi <- function(data, weights, mu, k, L, U, lambda = NULL, d = euc
   if(is_outgroup){
     nu <- mean(C)
     # With weights:
-    #obj_fn <- c(c(C * weights), lambda * weights)
+    obj_fn <- c(c(C * weights), lambda * weights)
     
     # Without weights:
-    obj_fn <- c(c(C * weights), lambda * rep(1,n))
+    #obj_fn <- c(c(C * weights), lambda * rep(1,n))
   } else {
     obj_fn <- c(C * weights) 
   }
