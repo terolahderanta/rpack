@@ -20,8 +20,7 @@ getmode <- function(v) {
 #' @export
 bounds <- function(weights, k, radius = 100) {
   mean_cluster_size <- sum(weights) / k
-  return(data.frame(L = mean_cluster_size - radius,
-                    U = mean_cluster_size + radius))
+  return(c(mean_cluster_size - radius, mean_cluster_size + radius))
 }
 
 #' Calculate the Euclidean distance between two points
