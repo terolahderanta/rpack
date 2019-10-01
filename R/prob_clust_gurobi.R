@@ -68,7 +68,7 @@ prob_clust_gurobi <- function(data, weights, k, init_mu, L, U, d = euc_dist2, fi
                           d = d,
                           place_to_point = place_to_point)
     
-    print(paste("Iteration:",iter))
+    #print(paste("Iteration:",iter))
     
     # If nothing is changing, stop
     if(all(old_mu == mu)) break
