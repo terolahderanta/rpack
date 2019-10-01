@@ -150,7 +150,10 @@ allocation_gurobi <- function(data, weights, mu, k, L, U, lambda = NULL, d = euc
   # TODO: Add outgroup penalty to this
   if(is_outgroup){
     nu <- mean(C)
+    # With weights:
     #obj_fn <- c(c(C * weights), lambda * weights)
+    
+    # Without weights:
     obj_fn <- c(c(C * weights), lambda * rep(1,n))
   } else {
     obj_fn <- c(C * weights) 
@@ -181,13 +184,15 @@ allocation_gurobi <- function(data, weights, mu, k, L, U, lambda = NULL, d = euc
   # Solving the linear program
   result <- gurobi::gurobi(model, params = params)
   
+  #assign_frac <- matrix(print(result$x), ncol = ifelse(is_outgroup, k + 1, k))
+  
   assign_frac <- matrix(print(result$x), ncol = ifelse(is_outgroup, k + 1, k))
   
   obj_max <- round(result$objval, digits = 3)
   
   
   # Print the value of the objective function
-  print(paste("Value of the objective function:", obj_max))
+  #print(paste("Value of the objective function:", obj_max))
   
   # Clear space
   rm(model, result)
