@@ -51,11 +51,7 @@ alt_alg <- function(coords, weights, k, N = 10, range = as.numeric(bounds(weight
                      frac_memb = frac_memb,
                      fixed_mu = fixed_mu)
   # Print the number of completed laps
-  print(paste("###################################################################"))
-  print(paste("###################################################################"))
-  print(paste("######################## Laps completed:", 1, "########################"))
-  print(paste("###################################################################"))
-  print(paste("###################################################################"))
+  print(paste("Laps completed: ", 1,"/", N, sep = ""))
   min_obj <- temp$obj
   best_temp <- temp
   for (i in 2:N) {
@@ -72,11 +68,7 @@ alt_alg <- function(coords, weights, k, N = 10, range = as.numeric(bounds(weight
                        fixed_mu = fixed_mu)
     
     # Print the number of completed laps
-    print(paste("###################################################################"))
-    print(paste("###################################################################"))
-    print(paste("######################## Laps completed:", i, "########################"))
-    print(paste("###################################################################"))
-    print(paste("###################################################################"))
+    print(paste("Laps completed: ", i, "/", N, sep = ""))
     if(temp$obj < min_obj){
       min_obj <- temp$obj
       best_temp <-  temp
