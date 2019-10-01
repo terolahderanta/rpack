@@ -38,7 +38,13 @@ alt_alg <- function(coords, weights, k, N = 10, range = as.numeric(bounds(weight
     init_mu <- NULL
   }
   
-  # Call prob_clust function
+  # Print the information about run
+  cat(paste("Progress bar (N = ", N,"):\n", sep = ""))
+  cat(paste("______________________________\n"))
+  
+  progress_bar <- 0
+  
+  # Call prob_clust function first time
   temp <- prob_clust(data = coords,
                      weights = w,
                      k = k,
@@ -50,8 +56,7 @@ alt_alg <- function(coords, weights, k, N = 10, range = as.numeric(bounds(weight
                      place_to_point = place_to_point,
                      frac_memb = frac_memb,
                      fixed_mu = fixed_mu)
-  # Print the number of completed laps
-  print(paste("Laps completed: ", 1,"/", N, sep = ""))
+  
   min_obj <- temp$obj
   best_temp <- temp
   for (i in 2:N) {
@@ -68,7 +73,12 @@ alt_alg <- function(coords, weights, k, N = 10, range = as.numeric(bounds(weight
                        fixed_mu = fixed_mu)
     
     # Print the number of completed laps
-    print(paste("Laps completed: ", i, "/", N, sep = ""))
+    if(floor((i/N)*30) > progress_bar){
+      progress_bar <- floor((i/N)*30)
+      cat(paste("#", sep = ""))  
+    }
+    
+    # Save the iteration with the lowest value of objective function
     if(temp$obj < min_obj){
       min_obj <- temp$obj
       best_temp <-  temp
