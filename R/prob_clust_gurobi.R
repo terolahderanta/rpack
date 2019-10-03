@@ -10,6 +10,7 @@
 #' @param init_mu Parameters (locations) that define the k distributions.
 #' @param L The lower limit for cluster sizes.
 #' @param U The upper limit for cluster sizes.
+#' @param capacity_weights Different weights for capacity limits.
 #' @param d The distance function.
 #' @param fixed_mu Predetermined center locations.
 #' @param lambda Outgroup-parameter.
@@ -17,7 +18,8 @@
 #' @param frac_memb If TRUE memberships are fractional.
 #' @return A list containing cluster allocation, cluster center and the current value of the objective function.
 #' @keywords internal
-prob_clust_gurobi <- function(data, weights, k, init_mu, L, U, d = euc_dist2, fixed_mu = NULL, lambda = NULL, place_to_point = TRUE, frac_memb = FALSE){
+prob_clust_gurobi <- function(data, weights, k, init_mu, L, U, capacity_weights = weights, 
+                              d = euc_dist2, fixed_mu = NULL, lambda = NULL, place_to_point = TRUE, frac_memb = FALSE){
   
   # Number of objects in data
   n <- nrow(data)
@@ -53,6 +55,7 @@ prob_clust_gurobi <- function(data, weights, k, init_mu, L, U, d = euc_dist2, fi
                                          k = k,
                                          L = L,
                                          U = U,
+                                         capacity_weights = capacity_weights,
                                          lambda = lambda,
                                          d = d,
                                          frac_memb = frac_memb)
@@ -92,12 +95,13 @@ prob_clust_gurobi <- function(data, weights, k, init_mu, L, U, d = euc_dist2, fi
 #' @param k The number of clusters.
 #' @param L The lower limit for cluster sizes.
 #' @param U The upper limit for cluster sizes.
+#' @param capacity_weights Different weights for capacity limits.
 #' @param lambda Outgroup-parameter
 #' @param d Distance function.
 #' @param frac_memb If TRUE memberships are fractional.
 #' @return New cluster allocations for each object in data and the maximum of the objective function.
 #' @keywords internal
-allocation_gurobi <- function(data, weights, mu, k, L, U, lambda = NULL, d = euc_dist2, frac_memb = FALSE){
+allocation_gurobi <- function(data, weights, mu, k, L, U, capacity_weights = weights, lambda = NULL, d = euc_dist2, frac_memb = FALSE){
   
   # Number of objects in data
   n <- nrow(data)
@@ -116,8 +120,10 @@ allocation_gurobi <- function(data, weights, mu, k, L, U, lambda = NULL, d = euc
   
   # Normalization
   C <- (C - min(C))/(max(C)- min(C))
-  max_w <- max(weights)
-  weights <- weights/max_w
+  weights <- weights/max(weights)
+  
+  max_w <- max(capacity_weights)
+  capacity_weights <- capacity_weights/max_w
   L <- L/max_w
   U <- U/max_w
   
@@ -132,7 +138,7 @@ allocation_gurobi <- function(data, weights, mu, k, L, U, lambda = NULL, d = euc
   const2 <- NULL
   temp <- c(t(matrix(1, ncol = n, nrow = k) * 1:k))
   for (i in 1:k) {
-    const2 <- c(const2, as.numeric(temp == i, n)*weights, rep(0, ifelse(is_outgroup, n, 0)))
+    const2 <- c(const2, as.numeric(temp == i, n)*capacity_weights, rep(0, ifelse(is_outgroup, n, 0)))
   }
   
   # Third constraint
@@ -185,6 +191,7 @@ allocation_gurobi <- function(data, weights, mu, k, L, U, lambda = NULL, d = euc
   result <- gurobi::gurobi(model, params = params)
   
   #assign_frac <- matrix(print(result$x), ncol = ifelse(is_outgroup, k + 1, k))
+  if(result$status == "INFEASIBLE") {stop("Model was infeasible!")}
   
   assign_frac <- matrix((result$x), ncol = ifelse(is_outgroup, k + 1, k))
   

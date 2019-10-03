@@ -5,6 +5,7 @@
 #' @param k Number of clusters.
 #' @param N Number of iterations.
 #' @param range Limits for the cluster size in a list.
+#' @param capacity_weights Different weights for capacity limits.
 #' @param d Distance function used in clustering.
 #' @param mu_initialization Method to initialize mu, default is kmpp.
 #' @param lambda Outgroup parameter.
@@ -17,8 +18,8 @@
 #'
 #' @examples
 alt_alg <- function(coords, weights, k, N = 10, range = as.numeric(bounds(weights, k, radius = 100)),
-                    d = euc_dist2, mu_initialization = NULL, lambda = NULL, frac_memb = FALSE,
-                    place_to_point = TRUE, fixed_mu = NULL){
+                    capacity_weights = weights, d = euc_dist2, mu_initialization = NULL, lambda = NULL,
+                    frac_memb = FALSE, place_to_point = TRUE, fixed_mu = NULL){
   
   if(N < 2){
     N <- 2
@@ -50,6 +51,7 @@ alt_alg <- function(coords, weights, k, N = 10, range = as.numeric(bounds(weight
                      k = k,
                      prior_dist = "uniform",
                      range = c(range[1], range[2]),
+                     capacity_weights = capacity_weights,
                      lambda = lambda,
                      d = d,
                      init_mu = init_mu[[1]],
@@ -65,6 +67,7 @@ alt_alg <- function(coords, weights, k, N = 10, range = as.numeric(bounds(weight
                        k = k,
                        prior_dist = "uniform",
                        range = c(range[1], range[2]),
+                       capacity_weights = capacity_weights,
                        lambda = lambda,
                        d = d,
                        init_mu = init_mu[[i]],
