@@ -16,10 +16,12 @@
 #' @param lambda Outgroup-parameter.
 #' @param place_to_point if TRUE, cluster centers will be placed to a point.
 #' @param frac_memb If TRUE memberships are fractional.
+#' @param timelimit Time limit for gurobi calculation.
 #' @return A list containing cluster allocation, cluster center and the current value of the objective function.
 #' @keywords internal
 prob_clust_gurobi <- function(data, weights, k, init_mu, L, U, capacity_weights = weights, 
-                              d = euc_dist2, fixed_mu = NULL, lambda = NULL, place_to_point = TRUE, frac_memb = FALSE){
+                              d = euc_dist2, fixed_mu = NULL, lambda = NULL, place_to_point = TRUE, 
+                              frac_memb = FALSE, timelimit = 600){
   
   # Number of objects in data
   n <- nrow(data)
@@ -58,7 +60,8 @@ prob_clust_gurobi <- function(data, weights, k, init_mu, L, U, capacity_weights 
                                          capacity_weights = capacity_weights,
                                          lambda = lambda,
                                          d = d,
-                                         frac_memb = frac_memb)
+                                         frac_memb = frac_memb,
+                                         timelimit = timelimit)
     assign_frac <- temp_allocation[[1]]
     obj_max <- temp_allocation[[2]]
     
@@ -99,9 +102,11 @@ prob_clust_gurobi <- function(data, weights, k, init_mu, L, U, capacity_weights 
 #' @param lambda Outgroup-parameter
 #' @param d Distance function.
 #' @param frac_memb If TRUE memberships are fractional.
+#' @param timelimit Time limit for gurobi calculation.
 #' @return New cluster allocations for each object in data and the maximum of the objective function.
 #' @keywords internal
-allocation_gurobi <- function(data, weights, mu, k, L, U, capacity_weights = weights, lambda = NULL, d = euc_dist2, frac_memb = FALSE){
+allocation_gurobi <- function(data, weights, mu, k, L, U, capacity_weights = weights, lambda = NULL,
+                              d = euc_dist2, frac_memb = FALSE, timelimit = 600){
   
   # Number of objects in data
   n <- nrow(data)
@@ -184,7 +189,7 @@ allocation_gurobi <- function(data, weights, mu, k, L, U, capacity_weights = wei
   
   # Using timelimit-parameter to stop the optimization if time exceeds 10 minutes
   params <- list()
-  params$TimeLimit <- 600
+  params$TimeLimit <- timelimit
   params$OutputFlag <- 0
   
   # Solving the linear program
