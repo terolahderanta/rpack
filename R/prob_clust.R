@@ -17,6 +17,7 @@
 #' @param place_to_point if TRUE, cluster centers will be placed to a point.
 #' @param fixed_mu Predetermined center locations.
 #' @param frac_memb If TRUE memberships are fractional.
+#' @param timelimit Time limit for gurobi calculation.
 #' @return A list containting the new cluster allocations for each object in data,
 #' the new cluster center locations and maximum of the objective function.
 #' @export
@@ -34,7 +35,8 @@ prob_clust <- function(data,
                        use_gurobi = TRUE,
                        place_to_point = TRUE,
                        fixed_mu = NULL,
-                       frac_memb = FALSE) {
+                       frac_memb = FALSE,
+                       timelimit = 600) {
   
   # Check arguments
   assertthat::assert_that(is.matrix(data) || is.data.frame(data), msg = "data must be a matrix or a data.frame!")
@@ -96,7 +98,8 @@ prob_clust <- function(data,
           fixed_mu = fixed_mu,
           lambda = lambda,
           place_to_point = place_to_point,
-          frac_memb = frac_memb
+          frac_memb = frac_memb,
+          timelimit = timelimit
         )  
     } else {
       # Call function prob_clust_simple
