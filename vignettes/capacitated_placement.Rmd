@@ -30,6 +30,7 @@ library(rpack)
 library(tidyverse)
 library(dplyr)
 library(ggplot2)
+library(MASS)
 ```
 
 
@@ -38,42 +39,27 @@ library(ggplot2)
 Let's set up some data to be clustered. 
 
 ```{r data, include=TRUE, echo = TRUE}
-set.seed(5)
 
-dat <- tibble(
-  x1 = c(stats::rnorm(50, mean = 1.5, sd = 0.8), 
-         stats::rnorm(50, mean = 5.5, sd = 0.8),
-         stats::rnorm(50, mean = 3.0, sd = 0.8), 
-         stats::rnorm(50, mean = 4.5, sd = 0.8), 8),
-  x2 = c(stats::rnorm(50, mean = 1.0, sd = 0.8), 
-         stats::rnorm(50, mean = 1.5, sd = 1.0),
-         stats::rnorm(50, mean = 4.5, sd= 1.0), 
-         stats::rnorm(50, mean = 4.5, sd = 0.8), 6),
-  w =  round(stats::runif(201, min = 0.51, max = 10.49)),
-  id = 1:201
-)
+set.seed(112)
 
-ggplot(
-  data = dat, 
-  mapping =
-    aes(x = x1,
-        y = x2,
-        size = w)
-) +
+test_dat <- simulate_normal_mixture(n = 300, k = 10)
+
+ggplot(data = test_n, aes(x = x, y = y, col = orig_group, size = w)) +
   geom_point() +
-  scale_size(range = c(2, 7)) +  # Scale objects sizes
+  scale_size(range = c(2, 6)) +  # Scale objects sizes
   guides(
     color = guide_legend(        # Point size in legend
       override.aes = list(size=5)
     )
   ) +
-  labs(x = "x1", y = "x2", title = "Unclustered data") +
+  labs(x = "x", y = "y", title = "Unclustered data") +
   theme(
     legend.position = "right",            # Legend position and removing ticks from axis
     axis.text.x = ggplot2::element_blank(),
     axis.text.y = ggplot2::element_blank(),
     axis.ticks = ggplot2::element_blank()
-  ) 
+  )
+
 ```
 
 Bigger datasets take a bit longer to cluster. To get a hang of the required processing times, you could try also the following sets:
@@ -120,49 +106,54 @@ range as the mean of object weight +- 20.
 k <- 10
 
 # Mean
-pr_mean <- round(sum(dat$w) / k)
+pr_mean <- round(sum(test_dat$w) / k)
 
 # Max radius for prior
-pr_width <- 20
+pr_width <- 100
 
 # Lower und upper limit for cluster size
 L <- (pr_mean - pr_width)
 U <- (pr_mean + pr_width)
 
 # FIXME: Explain lambda1
-lambda1 <- 5
-
+#lambda1 <- 5
+clust <- alt_alg(
+  coords = dplyr::select(test_dat, x, y),
+  weights = test_dat$w,
+  N = 2,
+  k = k,
+  range = c(L, U)
+)
 # Initialize cluster centers with kmeans
-init_kmpp <- kmpp(cbind(rep(dat$x1, dat$w),
-                        rep(dat$x2, dat$w)),
-                  k)
-init_mu <- init_kmpp$centers
+#init_kmpp <- kmpp(cbind(rep(dat$x1, dat$w),
+#                        rep(dat$x2, dat$w)),
+#                  k)
+#init_mu <- init_kmpp$centers
 
 # Cluster
-clust <- prob_clust(
-  data = dat %>% select(x1, x2),
-  weights = dat$w,
-  k = k,
-  init_mu = init_mu,
-  prior_dist = "uniform",
-  range = c(L, U),
-  lambda = lambda1
-)
-
-dat$cl <- clust[[1]]
-mu <- clust[[2]]
-obj_min <- clust[[3]]
+#clust <- prob_clust(
+#  data = dat %>% select(x1, x2),
+#  weights = dat$w,
+#  k = k,
+#  init_mu = init_mu,
+#  prior_dist = "uniform",
+#  range = c(L, U),
+#  lambda = lambda1
+#)
+#
+test_dat$cl <- clust$clusters
+mu <- clust$centers
+obj_min <- clust$obj
 ```
 
 Plot the clusters with `plot_clusters`.
 ```{r uniform_clusterplot, echo=TRUE, include=TRUE}
 plot_clusters(
-  x = dat %>% dplyr::pull(x1),
-  y = dat %>% dplyr::pull(x2),
-  weights = dat$w,
-  clusters = dat$cl,
+  coords = test_dat[,1:2],
+  weights = test_dat$w,
+  clusters = test_dat$cl,
   mu = mu,
-  title = paste("Probabilistic clustering, k = ", k, sep = ""),
+  title = paste("Capacitated clustering, k = ", k, sep = ""),
   subtitle = paste("Uniform prior in [", L, ", ", U, "] on cluster weights", sep = "")
 )
 ```
