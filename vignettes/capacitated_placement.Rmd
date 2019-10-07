@@ -154,7 +154,7 @@ L <- (pr_mean - pr_width)
 U <- (pr_mean + pr_width)
 
 # Outgroup parameter lambda
-lambda1 <- 0.01
+lambda1 <- 0.015
 
 # Alternaring algorithm
 clust2 <- alt_alg(
