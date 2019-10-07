@@ -60,7 +60,7 @@ random_sigma <- function(no_corr = TRUE){
 #' @export
 #'
 #' @examples
-simulate_normal_mixed <- function(n, k, w_dist_params = c(1, 100), w_dist = "uniform") {
+simulate_normal_mixture <- function(n, k, w_dist_params = c(1, 100), w_dist = "uniform") {
   
   n_sub <- round(n/k)
   
