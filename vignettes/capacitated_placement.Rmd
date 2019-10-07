@@ -30,7 +30,6 @@ library(rpack)
 library(tidyverse)
 library(dplyr)
 library(ggplot2)
-library(MASS)
 ```
 
 
@@ -42,9 +41,10 @@ Let's set up some data to be clustered.
 
 set.seed(112)
 
+# Generating 300 points from mixture of 10 normal distributions.
 test_dat <- simulate_normal_mixture(n = 300, k = 10)
 
-ggplot(data = test_n, aes(x = x, y = y, col = orig_group, size = w)) +
+ggplot(data = test_dat, aes(x = x, y = y, size = w)) +
   geom_point() +
   scale_size(range = c(2, 6)) +  # Scale objects sizes
   guides(
@@ -65,40 +65,31 @@ ggplot(data = test_n, aes(x = x, y = y, col = orig_group, size = w)) +
 Bigger datasets take a bit longer to cluster. To get a hang of the required processing times, you could try also the following sets:
 
 ```{r bigger_data, echo = TRUE, include = TRUE}
-dat_500 <- tibble(
-  x1 = c(stats::rnorm(100, mean = 0.5, sd = 2), 
-         stats::rnorm(150, mean = 23.5, sd = 5),
-         stats::rnorm(100, mean = 2.0, sd = 6), 
-         stats::rnorm(150, mean = 5.5, sd = 2)),
-  x2 = c(stats::rnorm(100, mean = 0.5, sd = 2), 
-         stats::rnorm(150, mean = 1.0, sd = 7.5),
-         stats::rnorm(100, mean = 20.5, sd= 5.5),
-         stats::rnorm(150, mean = 5.5, sd = 2)),
-  w =  round(stats::runif(500, min = 0.51, max = 10.49)),
-  id = 1:500
-)
 
-dat_1000 <- tibble(
-  x1 = c(stats::rnorm(250, mean = 0.5, sd = 2), 
-         stats::rnorm(250, mean = 21.5, sd = 3),
-         stats::rnorm(250, mean = 2.0, sd = 6), 
-         stats::rnorm(250, mean = 5.5, sd = 2)),
-  x2 = c(stats::rnorm(250, mean = 0.5, sd = 2), 
-         stats::rnorm(250, mean = 1.0, sd = 7.5),
-         stats::rnorm(250, mean = 20.5, sd= 5.5), 
-         stats::rnorm(250, mean = 5.5, sd = 2)),
-  w =  round(stats::runif(1000, min = 0.51, max = 10.49)),
-  id = 1:1000
-)
+set.seed(112)
+
+# Generating 500 points from mixture of 20 Laplace distributions.
+test_dat2 <- simulate_laplace_mixture(n = 500, k = 20)
+
+# Generating 1000 points from mixture of 25 normal distributions.
+test_dat3 <- simulate_normal_mixture(n = 1000, k = 25)
+
 ```
 
 
 
-## Clustering with uniform prior, k=10
+## Clustering with uniform prior
 
-First, cluster the data into k=10 clusters with a uniform prior for the cluster weights. In other words, 
+First, cluster the data into $k=10$ clusters with a uniform prior for the cluster weights. In other words, 
 we let the total weights of clusters vary uniformly within a given range. We set the
-range as the mean of object weight +- 20.
+range as $mean(w) \pm 100 $.
+
+k = 10
+uniform prior for the weights
+range: mean of object weight +- 100
+place_to_point = FALSE
+distance = euc_dist2
+no outliers
 
 ```{r uniform_clustering, include=TRUE, echo = TRUE}
 
@@ -115,32 +106,17 @@ pr_width <- 100
 L <- (pr_mean - pr_width)
 U <- (pr_mean + pr_width)
 
-# FIXME: Explain lambda1
-#lambda1 <- 5
+# Alternaring algorithm
 clust <- alt_alg(
   coords = dplyr::select(test_dat, x, y),
   weights = test_dat$w,
   N = 2,
   k = k,
-  range = c(L, U)
+  range = c(L, U),
+  place_to_point = FALSE
 )
-# Initialize cluster centers with kmeans
-#init_kmpp <- kmpp(cbind(rep(dat$x1, dat$w),
-#                        rep(dat$x2, dat$w)),
-#                  k)
-#init_mu <- init_kmpp$centers
 
-# Cluster
-#clust <- prob_clust(
-#  data = dat %>% select(x1, x2),
-#  weights = dat$w,
-#  k = k,
-#  init_mu = init_mu,
-#  prior_dist = "uniform",
-#  range = c(L, U),
-#  lambda = lambda1
-#)
-#
+# Save the results of the clustering.
 test_dat$cl <- clust$clusters
 mu <- clust$centers
 obj_min <- clust$obj
@@ -158,40 +134,49 @@ plot_clusters(
 )
 ```
 
-## Clustering with Gaussian prior, k=10
+## Clustering with limitations to center locations and adding outgroup for the data points.
 
-Second, cluster the data into k=10 clusters with a Gaussian prior for the cluster weights. In other words, 
-we let the total weights of clusters vary normally, setting the standard deviation as 3.
+Similarly, cluster the data into $k=10$ clusters, but limit the cluster heads to chosen from the set of data points. In addition, add outgroup for the data points. Outgroup consists of points that can be seen as outliers from other points and are not allocated to any of the clusters. 
 
-```{r gaussian_clustering, include=TRUE, echo = TRUE}
-   
-pr_sd <- 3
+```{r uniform_clustering_out, include=TRUE, echo = TRUE}
 
-clust <-
-  prob_clust(
-    data = dat %>% select(x1, x2),
-    weights = dat$w,
-    k = k,                # already set as 10
-    init_mu = init_mu,    # use the same initial centers as above
-    prior_dist = "normal",
-    sigma = pr_sd
-  )
-dat$cl <- clust[[1]]
-mu <- clust[[2]]
+# Number of clusters
+k <- 10
+
+# Mean
+pr_mean <- round(sum(test_dat$w) / k)
+
+# Max radius for prior
+pr_width <- 100
+
+# Lower und upper limit for cluster size
+L <- (pr_mean - pr_width)
+U <- (pr_mean + pr_width)
+
+# Outgroup parameter lambda
+lambda1 <- 0.01
+
+# Alternaring algorithm
+clust2 <- alt_alg(
+  coords = dplyr::select(test_dat, x, y),
+  weights = test_dat$w,
+  N = 2,
+  k = k,
+  range = c(L, U),
+  place_to_point = TRUE,
+  lambda = lambda1
+)
+
 ```
 
-Plot the clusters.
-
-```{r gaussian_clusterplot, include=TRUE, echo=TRUE}
+Plot the clusters. Outgroup points are labeled as "NA".
+```{r uniform_clusterplot_out, echo=TRUE, include=TRUE}
 plot_clusters(
-  x = dat %>% pull(x1),
-  y = dat %>% pull(x2),
-  weights = dat$w,
-  clusters= dat$cl,
-  mu = mu,
-  title = paste("Probabilistic clustering, k = ", k, 
-                sep = ""),
-  subtitle = paste("Gaussian prior on cluster weights (sd = ", pr_sd, ")", 
-                   sep = "")
-) 
+  coords = test_dat[,1:2],
+  weights = test_dat$w,
+  clusters = clust2$clusters,
+  mu = clust2$centers,
+  title = paste("Capacitated clustering, k = ", k, sep = ""),
+  subtitle = paste("Uniform prior in [", L, ", ", U, "] on cluster weights", sep = "")
+)
 ```
