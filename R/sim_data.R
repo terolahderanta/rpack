@@ -49,7 +49,7 @@ random_sigma <- function(no_corr = TRUE){
   return(Sigma)
 }
 
-#' Simulate from mixed normal distribution.
+#' Simulate from normal mixture distribution.
 #'
 #' @param n Total number of points simulated.
 #' @param k Number of different normals.
@@ -89,7 +89,7 @@ simulate_normal_mixture <- function(n, k, w_dist_params = c(1, 100), w_dist = "u
 }
 
 
-#' Simulate from mixed normal distribution.
+#' Simulate from Laplace mixture distribution.
 #'
 #' @param n Total number of points simulated.
 #' @param k Number of different normals.
@@ -100,7 +100,7 @@ simulate_normal_mixture <- function(n, k, w_dist_params = c(1, 100), w_dist = "u
 #' @export
 #'
 #' @examples
-simulate_laplace_mixed <- function(n, k, w_dist_params = c(1, 100), w_dist = "uniform") {
+simulate_laplace_mixture <- function(n, k, w_dist_params = c(1, 100), w_dist = "uniform") {
   
   n_sub <- round(n/k)
   
