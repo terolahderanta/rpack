@@ -123,14 +123,16 @@ allocation_gurobi <- function(data, weights, mu, k, L, U, capacity_weights = wei
     C[,i] <- apply(data, MARGIN = 1, FUN = d, x2 = mu[i,])
   }
   
+  multip <- 10000
+  
   # Normalization
-  C <- (C - min(C))/(max(C)- min(C))
-  weights <- weights/max(weights)
+  C <- (C - min(C))/(max(C)- min(C))*multip
+  weights <- (weights/max(weights))*multip
   
   max_w <- max(capacity_weights)
-  capacity_weights <- capacity_weights/max_w
-  L <- L/max_w
-  U <- U/max_w
+  capacity_weights <- (capacity_weights/max_w)*multip
+  L <- (L/max_w)*multip
+  U <- (U/max_w)*multip
   
   
   # First constraint
