@@ -16,12 +16,12 @@
 #' @param lambda Outgroup-parameter.
 #' @param place_to_point if TRUE, cluster centers will be placed to a point.
 #' @param frac_memb If TRUE memberships are fractional.
-#' @param timelimit Time limit for gurobi calculation.
+#' @param gurobi_params A list of parameters for gurobi function e.g. time limit, number of threads.
 #' @return A list containing cluster allocation, cluster center and the current value of the objective function.
 #' @keywords internal
 prob_clust_gurobi <- function(data, weights, k, init_mu, L, U, capacity_weights = weights, 
                               d = euc_dist2, fixed_mu = NULL, lambda = NULL, place_to_point = TRUE, 
-                              frac_memb = FALSE, timelimit = 600){
+                              frac_memb = FALSE, gurobi_params = NULL){
   
   # Number of objects in data
   n <- nrow(data)
@@ -61,7 +61,7 @@ prob_clust_gurobi <- function(data, weights, k, init_mu, L, U, capacity_weights 
                                          lambda = lambda,
                                          d = d,
                                          frac_memb = frac_memb,
-                                         timelimit = timelimit)
+                                         gurobi_params = gurobi_params)
     assign_frac <- temp_allocation[[1]]
     obj_max <- temp_allocation[[2]]
     
@@ -102,11 +102,11 @@ prob_clust_gurobi <- function(data, weights, k, init_mu, L, U, capacity_weights 
 #' @param lambda Outgroup-parameter
 #' @param d Distance function.
 #' @param frac_memb If TRUE memberships are fractional.
-#' @param timelimit Time limit for gurobi calculation.
+#' @param gurobi_params A list of parameters for gurobi function e.g. time limit, number of threads.
 #' @return New cluster allocations for each object in data and the maximum of the objective function.
 #' @keywords internal
 allocation_gurobi <- function(data, weights, mu, k, L, U, capacity_weights = weights, lambda = NULL,
-                              d = euc_dist2, frac_memb = FALSE, timelimit = 600){
+                              d = euc_dist2, frac_memb = FALSE, gurobi_params = NULL){
   
   # Number of objects in data
   n <- nrow(data)
@@ -123,7 +123,7 @@ allocation_gurobi <- function(data, weights, mu, k, L, U, capacity_weights = wei
     C[,i] <- apply(data, MARGIN = 1, FUN = d, x2 = mu[i,])
   }
   
-  multip <- 10000
+  multip <- 1000
   
   # Normalization
   C <- (C - min(C))/(max(C)- min(C))*multip
@@ -160,7 +160,7 @@ allocation_gurobi <- function(data, weights, mu, k, L, U, capacity_weights = wei
                              ncol=n_decision, 
                              byrow=T)
   
-  # TODO: Add outgroup penalty to this
+  # Outgroup penalty
   if(is_outgroup){
     nu <- mean(C)
     # With weights:
@@ -185,28 +185,24 @@ allocation_gurobi <- function(data, weights, mu, k, L, U, capacity_weights = wei
                         rep('<', k))
   
   # B = Binary, C = Continuous
-  
-  
   model$vtype      <- ifelse(frac_memb, 'C', 'B')
   
   # Using timelimit-parameter to stop the optimization if time exceeds 10 minutes
-  params <- list()
-  params$TimeLimit <- timelimit
-  params$OutputFlag <- 0
+  if(is.null(gurobi_params)){
+    gurobi_params <- list()
+    gurobi_params$TimeLimit <- 600
+    gurobi_params$OutputFlag <- 0  
+  }
   
   # Solving the linear program
-  result <- gurobi::gurobi(model, params = params)
+  result <- gurobi::gurobi(model, params = gurobi_params)
   
-  #assign_frac <- matrix(print(result$x), ncol = ifelse(is_outgroup, k + 1, k))
+  # Send error message if the model was infeasible
   if(result$status == "INFEASIBLE") {stop("Model was infeasible!")}
   
   assign_frac <- matrix((result$x), ncol = ifelse(is_outgroup, k + 1, k))
   
   obj_max <- round(result$objval, digits = 3)
-  
-  
-  # Print the value of the objective function
-  #print(paste("Value of the objective function:", obj_max))
   
   # Clear space
   rm(model, result)
