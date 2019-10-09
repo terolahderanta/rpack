@@ -1,6 +1,6 @@
 ---
 title: "Capacitated Placement"
-author: "Tero Lähderanta, Lauri Lovén"
+author: "Tero Lähderanta, Lauri Lovén, Leena Ruha"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
@@ -153,8 +153,8 @@ pr_width <- 100
 L <- (pr_mean - pr_width)
 U <- (pr_mean + pr_width)
 
-# Outgroup parameter lambda
-lambda1 <- 0.015
+# Outgroup parameter lambda, smaller value --> more outliers
+lambda1 <- 0.016
 
 # Alternaring algorithm
 clust2 <- alt_alg(
@@ -163,7 +163,7 @@ clust2 <- alt_alg(
   N = 2,
   k = k,
   range = c(L, U),
-  place_to_point = TRUE,
+  place_to_point = TRUE, # Cluster heads is chosen from the data points
   lambda = lambda1
 )
 
@@ -176,6 +176,50 @@ plot_clusters(
   weights = test_dat$w,
   clusters = clust2$clusters,
   mu = clust2$centers,
+  title = paste("Capacitated clustering, k = ", k, sep = ""),
+  subtitle = paste("Uniform prior in [", L, ", ", U, "] on cluster weights", sep = "")
+)
+```
+
+## Clustering with different distance metric.
+
+Once again, cluster the data into $k=10$ clusters, but calculate the distance between points as Euclidean distance instead of default squared Euclidean distance. Euclidean distance measure minimizes the physical distance between points and the center in a cluster, while squared Euclidean distance forms more spherical-like clusters.
+
+```{r uniform_clustering_euc_dist, include=TRUE, echo = TRUE}
+
+# Number of clusters
+k <- 10
+
+# Mean
+pr_mean <- round(sum(test_dat$w) / k)
+
+# Max radius for prior
+pr_width <- 100
+
+# Lower und upper limit for cluster size
+L <- (pr_mean - pr_width)
+U <- (pr_mean + pr_width)
+
+# Alternaring algorithm
+clust3 <- alt_alg(
+  coords = dplyr::select(test_dat, x, y),
+  weights = test_dat$w,
+  N = 2,
+  k = k,
+  range = c(L, U),
+  place_to_point = TRUE,
+  d = euc_dist # Input for distance metric is in a form of a function.  
+)
+
+```
+
+Plot the clusters.
+```{r uniform_clusterplot_euc_dist, echo=TRUE, include=TRUE}
+plot_clusters(
+  coords = test_dat[,1:2],
+  weights = test_dat$w,
+  clusters = clust3$clusters,
+  mu = clust3$centers,
   title = paste("Capacitated clustering, k = ", k, sep = ""),
   subtitle = paste("Uniform prior in [", L, ", ", U, "] on cluster weights", sep = "")
 )
