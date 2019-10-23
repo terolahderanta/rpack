@@ -17,11 +17,12 @@
 #' @param place_to_point if TRUE, cluster centers will be placed to a point.
 #' @param frac_memb If TRUE memberships are fractional.
 #' @param gurobi_params A list of parameters for gurobi function e.g. time limit, number of threads.
+#' @param dist_mat Distance matrix for all the points. 
 #' @return A list containing cluster allocation, cluster center and the current value of the objective function.
 #' @keywords internal
 prob_clust_gurobi <- function(data, weights, k, init_mu, L, U, capacity_weights = weights, 
                               d = euc_dist2, fixed_mu = NULL, lambda = NULL, place_to_point = TRUE, 
-                              frac_memb = FALSE, gurobi_params = NULL){
+                              frac_memb = FALSE, gurobi_params = NULL, dist_mat = NULL){
   
   # Number of objects in data
   n <- nrow(data)
@@ -61,7 +62,8 @@ prob_clust_gurobi <- function(data, weights, k, init_mu, L, U, capacity_weights 
                                          lambda = lambda,
                                          d = d,
                                          frac_memb = frac_memb,
-                                         gurobi_params = gurobi_params)
+                                         gurobi_params = gurobi_params,
+                                         dist_mat = dist_mat)
     assign_frac <- temp_allocation[[1]]
     obj_max <- temp_allocation[[2]]
     
@@ -103,10 +105,11 @@ prob_clust_gurobi <- function(data, weights, k, init_mu, L, U, capacity_weights 
 #' @param d Distance function.
 #' @param frac_memb If TRUE memberships are fractional.
 #' @param gurobi_params A list of parameters for gurobi function e.g. time limit, number of threads.
+#' @param dist_mat Distance matrix for all the points.
 #' @return New cluster allocations for each object in data and the maximum of the objective function.
 #' @keywords internal
 allocation_gurobi <- function(data, weights, mu, k, L, U, capacity_weights = weights, lambda = NULL,
-                              d = euc_dist2, frac_memb = FALSE, gurobi_params = NULL){
+                              d = euc_dist2, frac_memb = FALSE, gurobi_params = NULL, dist_mat = NULL){
   
   # Number of objects in data
   n <- nrow(data)
@@ -117,12 +120,16 @@ allocation_gurobi <- function(data, weights, mu, k, L, U, capacity_weights = wei
   # Number of decision variables
   n_decision <- ifelse(is_outgroup, n * k + n, n * k)
   
-  C <- matrix(0, ncol = k, nrow = n)
-  # TODO: Tähän tilalle muita keinoja mitata etäisyyttä
-  for(i in 1:k){
-    C[,i] <- apply(data, MARGIN = 1, FUN = d, x2 = mu[i,])
+  if(is.null(dist_mat)){
+    C <- matrix(0, ncol = k, nrow = n)
+    for(i in 1:k){
+      C[,i] <- apply(data, MARGIN = 1, FUN = d, x2 = mu[i,])
+    }
+  } else {
+    C <- dist_mat
   }
   
+  # Multiplier for the normalized values
   multip <- 1000
   
   # Normalization
