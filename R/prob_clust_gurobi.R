@@ -236,12 +236,12 @@ allocation_gurobi <- function(data, weights, mu, k, L, U, capacity_weights = wei
 #' @keywords internal
 location_gurobi <- function(data, assign_frac, weights, k, fixed_mu = NULL, d = euc_dist2, place_to_point = TRUE, predet_locations = NULL){
   
+  # Number of fixed centers
+  n_fixed <- ifelse(is.null(fixed_mu), 0, nrow(fixed_mu))
+  
   if(is.null(predet_locations)){
   # Matrix for cluster centers
   mu <- matrix(0, nrow = k, ncol = ncol(data))
-  
-  # Number of fixed centers
-  n_fixed <- ifelse(is.null(fixed_mu), 0, nrow(fixed_mu))
   
   if(n_fixed > 0){
     # Insert the fixed mu first
@@ -268,32 +268,50 @@ location_gurobi <- function(data, assign_frac, weights, k, fixed_mu = NULL, d = 
     }
   }
   } else {
-    # TODO: Add gurobi optimization for cases where centers are predetermined
+    # Distance from clusters (sum of point distances) to the centers. Each column refers to a cluster.
+    cluster_to_center <- matrix(0, ncol = k, nrow = nrow(predet_locations))
+    
+    for (i in (ifelse(n_fixed > 0, n_fixed + 1, 1)):k) {
+      cluster_to_center[,i] <- sapply(
+        X = 1:nrow(predet_locations),
+        FUN = function(x){
+          relevant_cl <- assign_frac[, i] > 0.001
+          dist_sum <- sum(sapply(which(relevant_cl), FUN = function(y){weights[y]*d(data[y,], predet_locations[x,])}))
+          return(dist_sum)
+        }
+      )
+    }
     
     # Gurobi-model
     model <- list()
     
     # Constraint matrix A
-    model$A          <- matrix(c(const1, const2, const3), 
-                               nrow=n + 2*k, 
-                               ncol=n_decision, 
-                               byrow=T)
-    
-    model$obj        <- obj_fn
+    model$A <- t(sapply(X = 1:k,FUN = function(x){as.numeric(rep(1:k, each = nrow(predet_locations)) == x)}))
+      
+    # Objective function
+    model$obj        <- c(cluster_to_center)
     
     model$modelsense <- 'min'
     
-    model$rhs        <- c(rep(1, n), 
-                          rep(L, k), 
-                          rep(U, k))
+    model$rhs        <- rep(1, k)
     
-    model$sense      <- c(rep('=', n), 
-                          rep('>', k), 
-                          rep('<', k))
+    model$sense      <- rep('=', k) 
+                          
+    gurobi_params <- list()
+    gurobi_params$TimeLimit <- 600
+    gurobi_params$OutputFlag <- 0  
+  
+    # Solving the linear program
+    result <- gurobi::gurobi(model, params = gurobi_params)
     
-    # B = Binary, C = Continuous
-    model$vtype      <- ifelse(frac_memb, 'C', 'B')
+    result_x <- matrix(result$x, ncol = k)
     
+    # Matrix for cluster centers
+    mu <- matrix(0, nrow = k, ncol = ncol(data))
+    
+    for (i in 1:k) {
+      mu[i,] <- as.numeric(predet_locations[which.max(result_x[,i]),] )
+    }
   }
   
   return(mu)
