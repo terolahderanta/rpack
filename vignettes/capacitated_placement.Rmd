@@ -84,12 +84,6 @@ First, cluster the data into $k=10$ clusters with a uniform prior for the cluste
 we let the total weights of clusters vary uniformly within a given range. We set the
 range as $mean(w) \pm 100 $.
 
-k = 10
-uniform prior for the weights
-range: mean of object weight +- 100
-place_to_point = FALSE
-distance = euc_dist2
-no outliers
 
 ```{r uniform_clustering, include=TRUE, echo = TRUE}
 
@@ -223,4 +217,61 @@ plot_clusters(
   title = paste("Capacitated clustering, k = ", k, sep = ""),
   subtitle = paste("Uniform prior in [", L, ", ", U, "] on cluster weights", sep = "")
 )
+```
+
+## Clustering with pre-determined center locations.
+
+Previously we allowed cluster heads to be one of the demand points. In this example we give all the possible cluster head locations as an input to the algorithm. 
+
+```{r uniform_clustering_euc_dist, include=TRUE, echo = TRUE}
+
+# Pre-determined cluster head locations
+predet_loc <- dplyr::tibble(x = rep(seq(from = -10, to = 10, by = 2), times = 11),
+                     y = rep(seq(from = -10, to = 10, by = 2), each = 11))
+
+# Plotting the demand points. Red points refer to predetermined center locations
+ggplot() +
+  geom_point(data = test_dat, aes(x = x, y = y, size = w)) +
+  scale_size(range = c(2, 6)) +  # Scale objects sizes
+  guides(
+    color = guide_legend(        # Point size in legend
+      override.aes = list(size=5)
+    )
+  ) +
+  labs(x = "x", y = "y", title = "Unclustered data") +
+  theme(
+    legend.position = "right",            # Legend position and removing ticks from axis
+    axis.text.x = ggplot2::element_blank(),
+    axis.text.y = ggplot2::element_blank(),
+    axis.ticks = ggplot2::element_blank()
+  ) + 
+  geom_point(data = predet_loc,
+             mapping = aes(x = x, y = y),
+             shape = 18,
+             col = "red")
+
+# Number of clusters
+k <- 10
+
+# Mean
+pr_mean <- round(sum(test_dat$w) / k)
+
+# Max radius for prior
+pr_width <- 100
+
+# Lower und upper limit for cluster size
+L <- (pr_mean - pr_width)
+U <- (pr_mean + pr_width)
+
+# Alternaring algorithm
+clust3 <- alt_alg(
+  coords = dplyr::select(test_dat, x, y),
+  weights = test_dat$w,
+  N = 2,
+  k = k,
+  range = c(L, U),
+  place_to_point = TRUE,
+  predet_locations = predet_loc
+)
+
 ```
