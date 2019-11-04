@@ -18,11 +18,13 @@
 #' @param frac_memb If TRUE memberships are fractional.
 #' @param gurobi_params A list of parameters for gurobi function e.g. time limit, number of threads.
 #' @param dist_mat Distance matrix for all the points. 
+#' @param predet_locations Choose centers only from predetermined locations.
 #' @return A list containing cluster allocation, cluster center and the current value of the objective function.
 #' @keywords internal
 prob_clust_gurobi <- function(data, weights, k, init_mu, L, U, capacity_weights = weights, 
                               d = euc_dist2, fixed_mu = NULL, lambda = NULL, place_to_point = TRUE, 
-                              frac_memb = FALSE, gurobi_params = NULL, dist_mat = NULL){
+                              frac_memb = FALSE, gurobi_params = NULL, dist_mat = NULL,
+                              predet_locations = NULL){
   
   # Number of objects in data
   n <- nrow(data)
@@ -74,7 +76,8 @@ prob_clust_gurobi <- function(data, weights, k, init_mu, L, U, capacity_weights 
                           k = k,
                           fixed_mu = fixed_mu,
                           d = d,
-                          place_to_point = place_to_point)
+                          place_to_point = place_to_point,
+                          predet_locations = predet_locations)
     
     #print(paste("Iteration:",iter))
     
@@ -228,10 +231,12 @@ allocation_gurobi <- function(data, weights, mu, k, L, U, capacity_weights = wei
 #' @param fixed_mu Predetermined center locations.
 #' @param d The distance function.
 #' @param place_to_point if TRUE, cluster centers will be placed to a point.
+#' @param predet_locations Choose centers only from predetermined locations.
 #' @return New cluster centers.
 #' @keywords internal
-location_gurobi <- function(data, assign_frac, weights, k, fixed_mu = NULL, d = euc_dist2, place_to_point = TRUE){
+location_gurobi <- function(data, assign_frac, weights, k, fixed_mu = NULL, d = euc_dist2, place_to_point = TRUE, predet_locations = NULL){
   
+  if(is.null(predet_locations)){
   # Matrix for cluster centers
   mu <- matrix(0, nrow = k, ncol = ncol(data))
   
@@ -259,10 +264,37 @@ location_gurobi <- function(data, assign_frac, weights, k, fixed_mu = NULL, d = 
                                  d = d))
     } else {
       # Weighted mean
-      mu[i,] <- colSums(data * weights * assign_frac[, i]) / sum(assign_frac[, i]*weights)
+      mu[i,] <- colSums(data * weights * assign_frac[, i]) / sum(assign_frac[, i] * weights)
     }
   }
-  
+  } else {
+    # TODO: Add gurobi optimization for cases where centers are predetermined
+    
+    # Gurobi-model
+    model <- list()
+    
+    # Constraint matrix A
+    model$A          <- matrix(c(const1, const2, const3), 
+                               nrow=n + 2*k, 
+                               ncol=n_decision, 
+                               byrow=T)
+    
+    model$obj        <- obj_fn
+    
+    model$modelsense <- 'min'
+    
+    model$rhs        <- c(rep(1, n), 
+                          rep(L, k), 
+                          rep(U, k))
+    
+    model$sense      <- c(rep('=', n), 
+                          rep('>', k), 
+                          rep('<', k))
+    
+    # B = Binary, C = Continuous
+    model$vtype      <- ifelse(frac_memb, 'C', 'B')
+    
+  }
   
   return(mu)
 }
