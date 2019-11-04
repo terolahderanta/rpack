@@ -251,13 +251,13 @@ ggplot() +
              col = "red")
 
 # Number of clusters
-k <- 10
+k <- 5
 
 # Mean
 pr_mean <- round(sum(test_dat$w) / k)
 
 # Max radius for prior
-pr_width <- 100
+pr_width <- 500
 
 # Lower und upper limit for cluster size
 L <- (pr_mean - pr_width)

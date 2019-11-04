@@ -26,14 +26,14 @@ bounds <- function(weights, k, radius = 100) {
 #' Calculate the Euclidean distance between two points
 #' @param x1 1. point.
 #' @param x2 2. point.
-#' @return The Eclidean distance.
+#' @return Euclidean distance.
 #' @export
 euc_dist <- function(x1, x2) sqrt(sum((x1 - x2) ^ 2))
 
 #' Calculate the squared Euclidean distance between two points
 #' @param x1 1. point.
 #' @param x2 2. point.
-#' @return The squared Eclidean distance.
+#' @return Squared Euclidean distance.
 #' @export
 euc_dist2 <- function(x1, x2) sum((x1 - x2) ^ 2)
 
