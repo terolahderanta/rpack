@@ -18,6 +18,7 @@
 #' @param fixed_mu Predetermined center locations.
 #' @param frac_memb If TRUE memberships are fractional.
 #' @param gurobi_params A list of parameters for gurobi function e.g. time limit, number of threads.
+#' @param dist_mat Distance matrix for all the points. 
 #' @param predet_locations Choose centers only from predetermined locations.
 #' @return A list containting the new cluster allocations for each object in data,
 #' the new cluster center locations and maximum of the objective function.
@@ -38,6 +39,7 @@ prob_clust <- function(data,
                        fixed_mu = NULL,
                        frac_memb = FALSE,
                        gurobi_params = NULL,
+                       dist_mat = NULL,
                        predet_locations = NULL) {
   
   # Check arguments
@@ -102,6 +104,7 @@ prob_clust <- function(data,
           place_to_point = place_to_point,
           frac_memb = frac_memb,
           gurobi_params = gurobi_params,
+          dist_mat = dist_mat,
           predet_locations = predet_locations
         )  
     } else {
