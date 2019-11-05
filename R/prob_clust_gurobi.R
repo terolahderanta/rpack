@@ -320,7 +320,7 @@ location_gurobi <- function(data, assign_frac, weights, k, fixed_mu = NULL, d = 
         relevant_cl <- assign_frac[, i] > 0.001
         
         # Distances from relevant points to all the centers
-        cluster_to_center[, i] <- colSums(dist_mat[relevant_cl,]*weights[relevant_cl])
+        cluster_to_center[, i] <- colSums(dist_mat[relevant_cl,, drop=FALSE]*weights[relevant_cl])
         
       }
     }
