@@ -35,6 +35,13 @@ prob_clust_gurobi <- function(data, weights, k, init_mu, L, U, capacity_weights 
   # Initial clusters
   clusters <- rep(0,n)
   
+  # Save the original distance matrix to all the possible center locations 
+  if(!is.null(dist_mat)){
+    dist_to_mu <- dist_mat[,sort(sample(1:ncol(dist_mat), k))]
+  } else {
+    dist_to_mu <- NULL
+  }
+  
   # Number of fixed centers
   n_fixed <- ifelse(is.null(fixed_mu), 0, nrow(fixed_mu))
   
@@ -65,20 +72,26 @@ prob_clust_gurobi <- function(data, weights, k, init_mu, L, U, capacity_weights 
                                          d = d,
                                          frac_memb = frac_memb,
                                          gurobi_params = gurobi_params,
-                                         dist_mat = dist_mat)
+                                         dist_to_mu = dist_to_mu)
     assign_frac <- temp_allocation[[1]]
     obj_max <- temp_allocation[[2]]
     
     # Updating cluster centers (Parameter-step)
-    mu <- location_gurobi(data = data,
+    temp_location <- location_gurobi(data = data,
                           assign_frac = assign_frac,
                           weights = weights,
                           k = k,
                           fixed_mu = fixed_mu,
                           d = d,
                           place_to_point = place_to_point,
-                          predet_locations = predet_locations)
+                          predet_locations = predet_locations,
+                          dist_mat = dist_mat)
     
+    mu <- temp_location$mu
+    
+    if(!is.null(dist_mat)){
+      dist_to_mu <- dist_mat[,temp_location$mu_id]
+    }
     #print(paste("Iteration:",iter))
     
     # If nothing is changing, stop
@@ -108,11 +121,11 @@ prob_clust_gurobi <- function(data, weights, k, init_mu, L, U, capacity_weights 
 #' @param d Distance function.
 #' @param frac_memb If TRUE memberships are fractional.
 #' @param gurobi_params A list of parameters for gurobi function e.g. time limit, number of threads.
-#' @param dist_mat Distance matrix for all the points.
+#' @param dist_to_mu Distance matrix for all the points.
 #' @return New cluster allocations for each object in data and the maximum of the objective function.
 #' @keywords internal
 allocation_gurobi <- function(data, weights, mu, k, L, U, capacity_weights = weights, lambda = NULL,
-                              d = euc_dist2, frac_memb = FALSE, gurobi_params = NULL, dist_mat = NULL){
+                              d = euc_dist2, frac_memb = FALSE, gurobi_params = NULL, dist_to_mu = NULL){
   
   # Number of objects in data
   n <- nrow(data)
@@ -123,17 +136,20 @@ allocation_gurobi <- function(data, weights, mu, k, L, U, capacity_weights = wei
   # Number of decision variables
   n_decision <- ifelse(is_outgroup, n * k + n, n * k)
   
-  if(is.null(dist_mat)){
+  if(is.null(dist_to_mu)){
     C <- matrix(0, ncol = k, nrow = n)
     for(i in 1:k){
       C[,i] <- apply(data, MARGIN = 1, FUN = d, x2 = mu[i,])
     }
+  } else if(ncol(dist_to_mu) == k) {
+    C <- dist_to_mu
   } else {
-    C <- dist_mat
+    #sample(1:ncol(dist_mat), k)
+    stop("Error in distance matrix size! (rpack)")
   }
   
   # Multiplier for the normalized values
-  multip <- 1000
+  multip <- 1
   
   # Normalization
   C <- (C - min(C))/(max(C)- min(C))*multip
@@ -208,7 +224,7 @@ allocation_gurobi <- function(data, weights, mu, k, L, U, capacity_weights = wei
   result <- gurobi::gurobi(model, params = gurobi_params)
   
   # Send error message if the model was infeasible
-  if(result$status == "INFEASIBLE") {stop("Model was infeasible!")}
+  if(result$status == "INFEASIBLE") {stop("Model was infeasible! (rpack)")}
   
   assign_frac <- matrix((result$x), ncol = ifelse(is_outgroup, k + 1, k))
   
@@ -232,14 +248,18 @@ allocation_gurobi <- function(data, weights, mu, k, L, U, capacity_weights = wei
 #' @param d The distance function.
 #' @param place_to_point if TRUE, cluster centers will be placed to a point.
 #' @param predet_locations Choose centers only from predetermined locations.
+#' @param dist_mat Distance matrix for all the points.
 #' @return New cluster centers.
 #' @keywords internal
-location_gurobi <- function(data, assign_frac, weights, k, fixed_mu = NULL, d = euc_dist2, place_to_point = TRUE, predet_locations = NULL){
+location_gurobi <- function(data, assign_frac, weights, k, fixed_mu = NULL, d = euc_dist2, place_to_point = TRUE, 
+                            predet_locations = NULL, dist_mat = NULL){
   
   # Number of fixed centers
   n_fixed <- ifelse(is.null(fixed_mu), 0, nrow(fixed_mu))
   
-  if(is.null(predet_locations)){
+  mu_id <- NULL
+  
+  if(is.null(predet_locations) & is.null(dist_mat)){
   # Matrix for cluster centers
   mu <- matrix(0, nrow = k, ncol = ncol(data))
   
@@ -249,7 +269,7 @@ location_gurobi <- function(data, assign_frac, weights, k, fixed_mu = NULL, d = 
       mu[i,] <- fixed_mu[i,]
     }
   }
-  
+
   # Update mu for each cluster
   for (i in (ifelse(n_fixed > 0, n_fixed + 1, 1)):k) {
     
@@ -268,25 +288,49 @@ location_gurobi <- function(data, assign_frac, weights, k, fixed_mu = NULL, d = 
     }
   }
   } else {
-    # Distance from clusters (sum of point distances) to the centers. Each column refers to a cluster.
-    cluster_to_center <- matrix(0, ncol = k, nrow = nrow(predet_locations))
     
-    for (i in (ifelse(n_fixed > 0, n_fixed + 1, 1)):k) {
-      cluster_to_center[,i] <- sapply(
-        X = 1:nrow(predet_locations),
-        FUN = function(x){
-          relevant_cl <- assign_frac[, i] > 0.001
-          dist_sum <- sum(sapply(which(relevant_cl), FUN = function(y){weights[y]*d(data[y,], predet_locations[x,])}))
-          return(dist_sum)
-        }
-      )
+    if(is.null(dist_mat)){
+      # Calculate the distances from the locations of predetermined centers
+      
+      m <- nrow(predet_locations)
+      
+      # Distance from clusters (sum of point distances) to the centers. Each column refers to a cluster.
+      cluster_to_center <- matrix(0, ncol = k, nrow = m)
+      
+      for (i in (ifelse(n_fixed > 0, n_fixed + 1, 1)):k) {
+        cluster_to_center[,i] <- sapply(
+          X = 1:m,
+          FUN = function(x){
+            relevant_cl <- assign_frac[, i] > 0.001
+            dist_sum <- sum(sapply(which(relevant_cl), FUN = function(y){weights[y]*d(data[y,], predet_locations[x,])}))
+            return(dist_sum)
+          }
+        )
+      }
+      
+    } else {
+      # Calculate the distances from distance matrix
+      
+      m <- ncol(dist_mat)
+      
+      # Distance from clusters (sum of point distances) to the centers. Each column refers to a cluster.
+      cluster_to_center <- matrix(0, ncol = k, nrow = m)
+      for (i in (ifelse(n_fixed > 0, n_fixed + 1, 1)):k) {
+        # Relevant points to cluster 1
+        relevant_cl <- assign1[, i] > 0.001
+        
+        # Distances from relevant points to all the centers
+        cluster_to_center[, i] <- colSums(all_dist1[relevant_cl,]*weights1[relevant_cl])
+        
+      }
     }
+    
     
     # Gurobi-model
     model <- list()
     
     # Constraint matrix A
-    model$A <- t(sapply(X = 1:k,FUN = function(x){as.numeric(rep(1:k, each = nrow(predet_locations)) == x)}))
+    model$A <- t(sapply(X = 1:k,FUN = function(x){as.numeric(rep(1:k, each = m) == x)}))
       
     # Objective function
     model$obj        <- c(cluster_to_center)
@@ -305,14 +349,20 @@ location_gurobi <- function(data, assign_frac, weights, k, fixed_mu = NULL, d = 
     result <- gurobi::gurobi(model, params = gurobi_params)
     
     result_x <- matrix(result$x, ncol = k)
-    
+
     # Matrix for cluster centers
     mu <- matrix(0, nrow = k, ncol = ncol(data))
+    mu_id <- rep(0, k)
     
     for (i in 1:k) {
-      mu[i,] <- as.numeric(predet_locations[which.max(result_x[,i]),] )
+      mu_id[i] <- which.max(result_x[,i])
+      
+      if(!is.null(predet_locations)){
+        mu[i,] <- as.numeric(predet_locations[mu_id[i],] )
+      }
     }
   }
+
   
-  return(mu)
+  return(list(mu=mu, mu_id = mu_id))
 }
