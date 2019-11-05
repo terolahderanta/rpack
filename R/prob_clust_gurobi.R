@@ -53,6 +53,9 @@ prob_clust_gurobi <- function(data, weights, k, init_mu, L, U, capacity_weights 
     mu <- init_mu
   }
   
+  # Mu indeces
+  mu_id <- NULL
+  
   # Maximum number of laps
   max_sim <- 50
   
@@ -90,9 +93,9 @@ prob_clust_gurobi <- function(data, weights, k, init_mu, L, U, capacity_weights 
     mu <- temp_location$mu
     
     if(!is.null(dist_mat)){
-      dist_to_mu <- dist_mat[,temp_location$mu_id]
+      mu_id <- temp_location$mu_id
+      dist_to_mu <- dist_mat[, mu_id]
     }
-    #print(paste("Iteration:",iter))
     
     # If nothing is changing, stop
     if(all(old_mu == mu)) break
@@ -105,7 +108,7 @@ prob_clust_gurobi <- function(data, weights, k, init_mu, L, U, capacity_weights 
   clusters <- ifelse(clusters == (k+1), 99, clusters)
   
   # Return cluster allocation, cluster center and the current value of the objective function
-  return(list(clusters = clusters, centers = mu, obj = obj_max, assign_frac = assign_frac))
+  return(list(clusters = clusters, centers = mu, obj = obj_max, assign_frac = assign_frac, mu_id = mu_id))
 }
 
 #' Update cluster allocations by maximizing the joint log-likelihood.
