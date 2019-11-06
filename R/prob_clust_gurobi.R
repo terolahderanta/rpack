@@ -19,24 +19,27 @@
 #' @param gurobi_params A list of parameters for gurobi function e.g. time limit, number of threads.
 #' @param dist_mat Distance matrix for all the points. 
 #' @param predet_locations Choose centers only from predetermined locations.
+#' @param print_output Print details: 0 = nothing, 1 = simple, 2 = steps, 3 = complex.
 #' @return A list containing cluster allocation, cluster center and the current value of the objective function.
 #' @keywords internal
 prob_clust_gurobi <- function(data, weights, k, init_mu, L, U, capacity_weights = weights, 
                               d = euc_dist2, fixed_mu = NULL, lambda = NULL, place_to_point = TRUE, 
                               frac_memb = FALSE, gurobi_params = NULL, dist_mat = NULL,
-                              predet_locations = NULL){
+                              predet_locations = NULL, print_output = 1){
   
   # Number of objects in data
   n <- nrow(data)
   
   # Weights must be integers
-  weights <- round(weights)
+  #weights <- round(weights)
   
   # Initial clusters
   clusters <- rep(0,n)
   
   # Save the original distance matrix to all the possible center locations 
   if(!is.null(dist_mat)){
+    
+    # Select a random set of centersas the initial mus
     dist_to_mu <- dist_mat[,sort(sample(1:ncol(dist_mat), k))]
   } else {
     dist_to_mu <- NULL
@@ -75,7 +78,8 @@ prob_clust_gurobi <- function(data, weights, k, init_mu, L, U, capacity_weights 
                                          d = d,
                                          frac_memb = frac_memb,
                                          gurobi_params = gurobi_params,
-                                         dist_to_mu = dist_to_mu)
+                                         dist_to_mu = dist_to_mu,
+                                         print_output = print_output)
     assign_frac <- temp_allocation[[1]]
     obj_max <- temp_allocation[[2]]
     
@@ -89,7 +93,8 @@ prob_clust_gurobi <- function(data, weights, k, init_mu, L, U, capacity_weights 
                           place_to_point = place_to_point,
                           predet_locations = predet_locations,
                           dist_mat = dist_mat,
-                          gurobi_params = gurobi_params)
+                          gurobi_params = gurobi_params,
+                          print_output = print_output)
     
     mu <- temp_location$mu
     
@@ -126,10 +131,12 @@ prob_clust_gurobi <- function(data, weights, k, init_mu, L, U, capacity_weights 
 #' @param frac_memb If TRUE memberships are fractional.
 #' @param gurobi_params A list of parameters for gurobi function e.g. time limit, number of threads.
 #' @param dist_to_mu Distance matrix for all the points.
+#' @param print_output Print details: 0 = nothing, 1 = simple, 2 = steps, 3 = complex.
 #' @return New cluster allocations for each object in data and the maximum of the objective function.
 #' @keywords internal
 allocation_gurobi <- function(data, weights, mu, k, L, U, capacity_weights = weights, lambda = NULL,
-                              d = euc_dist2, frac_memb = FALSE, gurobi_params = NULL, dist_to_mu = NULL){
+                              d = euc_dist2, frac_memb = FALSE, gurobi_params = NULL, dist_to_mu = NULL,
+                              print_output = 1){
   
   # Number of objects in data
   n <- nrow(data)
@@ -224,6 +231,9 @@ allocation_gurobi <- function(data, weights, mu, k, L, U, capacity_weights = wei
     gurobi_params$OutputFlag <- 0  
   }
   
+  # Print details
+  if(print_output == 2){cat("A-step: ")}
+  
   # Solving the linear program
   result <- gurobi::gurobi(model, params = gurobi_params)
   
@@ -233,6 +243,9 @@ allocation_gurobi <- function(data, weights, mu, k, L, U, capacity_weights = wei
   assign_frac <- matrix((result$x), ncol = ifelse(is_outgroup, k + 1, k))
   
   obj_max <- round(result$objval, digits = 3)
+  
+  # Print details
+  if(print_output == 2){cat(paste("Done! (", result$status, ")\n", sep = ""))}
   
   # Clear space
   rm(model, result)
@@ -254,10 +267,11 @@ allocation_gurobi <- function(data, weights, mu, k, L, U, capacity_weights = wei
 #' @param predet_locations Choose centers only from predetermined locations.
 #' @param dist_mat Distance matrix for all the points.
 #' @param gurobi_params A list of parameters for gurobi function e.g. time limit, number of threads.
+#' @param print_output Print details: 0 = nothing, 1 = simple, 2 = steps, 3 = complex.
 #' @return New cluster centers.
 #' @keywords internal
 location_gurobi <- function(data, assign_frac, weights, k, fixed_mu = NULL, d = euc_dist2, place_to_point = TRUE, 
-                            predet_locations = NULL, dist_mat = NULL, gurobi_params = NULL){
+                            predet_locations = NULL, dist_mat = NULL, gurobi_params = NULL, print_output = 1){
   
   # Number of fixed centers
   n_fixed <- ifelse(is.null(fixed_mu), 0, nrow(fixed_mu))
@@ -355,11 +369,17 @@ location_gurobi <- function(data, assign_frac, weights, k, fixed_mu = NULL, d = 
       gurobi_params$OutputFlag <- 0  
     }  
   
+    # Print details
+    if(print_output == 2){cat("L-step: ")}
+    
     # Solving the linear program
     result <- gurobi::gurobi(model, params = gurobi_params)
     
     result_x <- matrix(result$x, ncol = k)
 
+    # Print details
+    if(print_output == 2){cat(paste("Done! (", result$status, ")\n", sep = ""))}
+    
     # Matrix for cluster centers
     mu <- matrix(0, nrow = k, ncol = ncol(data))
     mu_id <- rep(0, k)
@@ -371,6 +391,10 @@ location_gurobi <- function(data, assign_frac, weights, k, fixed_mu = NULL, d = 
         mu[i,] <- as.numeric(predet_locations[mu_id[i],] )
       }
     }
+    
+    # Clear space
+    rm(model, result)
+    
   }
 
   

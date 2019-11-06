@@ -15,6 +15,7 @@
 #' @param gurobi_params A list of parameters for gurobi function e.g. time limit, number of threads.
 #' @param dist_mat Distance matrix for all the points. 
 #' @param predet_locations Choose centers only from predetermined locations.
+#' @param print_output Print details: 0 = nothing, 1 = simple, 2 = steps, 3 = complex.
 #'
 #' @return Clustering object with allocation, center locations and the value of the objective function
 #' @export
@@ -23,7 +24,7 @@
 alt_alg <- function(coords, weights, k, N = 10, range = as.numeric(bounds(weights, k, radius = 100)),
                     capacity_weights = weights, d = euc_dist2, mu_initialization = NULL, lambda = NULL,
                     frac_memb = FALSE, place_to_point = TRUE, fixed_mu = NULL, gurobi_params = NULL,
-                    dist_mat = NULL, predet_locations = NULL){
+                    dist_mat = NULL, predet_locations = NULL, print_output = 1){
   
   
  #if(!is.null(mu_initialization) & mu_initialization == "random"){
@@ -37,12 +38,15 @@ alt_alg <- function(coords, weights, k, N = 10, range = as.numeric(bounds(weight
   init_mu <- NULL
   
   # Print the information about run
-  cat(paste("Progress bar (N = ", N,"):\n", sep = ""))
+  cat(paste("Progress (N = ", N,"):\n", sep = ""))
   cat(paste("______________________________\n"))
   
   progress_bar <- 0
   
   for (i in 1:N) {
+    if(print_output == 2){
+      cat(paste("Lap ", i, "\n-------\n", sep = ""))
+    }
     temp <- prob_clust(data = coords,
                        weights = weights,
                        k = k,
@@ -57,7 +61,8 @@ alt_alg <- function(coords, weights, k, N = 10, range = as.numeric(bounds(weight
                        fixed_mu = fixed_mu,
                        gurobi_params = gurobi_params,
                        dist_mat = dist_mat,
-                       predet_locations = predet_locations)
+                       predet_locations = predet_locations,
+                       print_output = print_output)
     
     if(i == 1){
       min_obj <- temp$obj
@@ -65,10 +70,10 @@ alt_alg <- function(coords, weights, k, N = 10, range = as.numeric(bounds(weight
     }
     
     # Print the number of completed laps
-    if(floor((i/N)*30) > progress_bar){
+    if(print_output == 1 & (floor((i/N)*30) > progress_bar)){
       cat(paste0(rep("#", floor((i/N)*30) - progress_bar), collapse = ""))  
       progress_bar <- floor((i/N)*30)
-    }
+    } 
     
     # Save the iteration with the lowest value of objective function
     if(temp$obj < min_obj){
