@@ -88,7 +88,8 @@ prob_clust_gurobi <- function(data, weights, k, init_mu, L, U, capacity_weights 
                           d = d,
                           place_to_point = place_to_point,
                           predet_locations = predet_locations,
-                          dist_mat = dist_mat)
+                          dist_mat = dist_mat,
+                          gurobi_params = gurobi_params)
     
     mu <- temp_location$mu
     
@@ -252,10 +253,11 @@ allocation_gurobi <- function(data, weights, mu, k, L, U, capacity_weights = wei
 #' @param place_to_point if TRUE, cluster centers will be placed to a point.
 #' @param predet_locations Choose centers only from predetermined locations.
 #' @param dist_mat Distance matrix for all the points.
+#' @param gurobi_params A list of parameters for gurobi function e.g. time limit, number of threads.
 #' @return New cluster centers.
 #' @keywords internal
 location_gurobi <- function(data, assign_frac, weights, k, fixed_mu = NULL, d = euc_dist2, place_to_point = TRUE, 
-                            predet_locations = NULL, dist_mat = NULL){
+                            predet_locations = NULL, dist_mat = NULL, gurobi_params = NULL){
   
   # Number of fixed centers
   n_fixed <- ifelse(is.null(fixed_mu), 0, nrow(fixed_mu))
@@ -343,10 +345,15 @@ location_gurobi <- function(data, assign_frac, weights, k, fixed_mu = NULL, d = 
     model$rhs        <- rep(1, k)
     
     model$sense      <- rep('=', k) 
+    
+    model$vtype      <- 'B'
                           
-    gurobi_params <- list()
-    gurobi_params$TimeLimit <- 600
-    gurobi_params$OutputFlag <- 0  
+    # Using timelimit-parameter to stop the optimization if time exceeds 10 minutes
+    if(is.null(gurobi_params)){
+      gurobi_params <- list()
+      gurobi_params$TimeLimit <- 600
+      gurobi_params$OutputFlag <- 0  
+    }  
   
     # Solving the linear program
     result <- gurobi::gurobi(model, params = gurobi_params)
