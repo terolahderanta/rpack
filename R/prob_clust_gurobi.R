@@ -38,8 +38,7 @@ prob_clust_gurobi <- function(data, weights, k, init_mu, L, U, capacity_weights 
   
   # Save the original distance matrix to all the possible center locations 
   if(!is.null(dist_mat)){
-    
-    # Select a random set of centersas the initial mus
+    # Select a random set of centers as the initial mus
     dist_to_mu <- dist_mat[,sort(sample(1:ncol(dist_mat), k))]
   } else {
     dist_to_mu <- NULL
@@ -148,22 +147,25 @@ allocation_gurobi <- function(data, weights, mu, k, L, U, capacity_weights = wei
   n_decision <- ifelse(is_outgroup, n * k + n, n * k)
   
   if(is.null(dist_to_mu)){
-    C <- matrix(0, ncol = k, nrow = n)
+    dist_to_mu <- matrix(0, ncol = k, nrow = n)
     for(i in 1:k){
-      C[,i] <- apply(data, MARGIN = 1, FUN = d, x2 = mu[i,])
+      dist_to_mu[,i] <- apply(data, MARGIN = 1, FUN = d, x2 = mu[i,])
     }
-  } else if(ncol(dist_to_mu) == k) {
-    C <- dist_to_mu
-  } else {
-    #sample(1:ncol(dist_mat), k)
-    stop("Error in distance matrix size! (rpack)")
-  }
+  } 
+  #else if(ncol(dist_to_mu) == k) {
+  #  C <- dist_to_mu
+  #} else {
+  #  #sample(1:ncol(dist_mat), k)
+  #  stop("Error in distance matrix size! (rpack)")
+  #}
   
   # Multiplier for the normalized values
   multip <- 1
   
   # Normalization
-  C <- (C - min(C))/(max(C)- min(C))*multip
+  min_dist <- min(dist_to_mu)
+  max_dist <- max(dist_to_mu)
+  dist_to_mu <- (dist_to_mu - min_dist)/(max_dist - min_dist)*multip
   weights <- (weights/max(weights))*multip
   
   max_w <- max(capacity_weights)
@@ -199,14 +201,14 @@ allocation_gurobi <- function(data, weights, mu, k, L, U, capacity_weights = wei
   
   # Outgroup penalty
   if(is_outgroup){
-    nu <- mean(C)
+    nu <- mean(dist_to_mu)
     # With weights:
-    obj_fn <- c(c(C * weights), lambda * weights)
+    obj_fn <- c(c(dist_to_mu * weights), lambda * weights)
     
     # Without weights:
     #obj_fn <- c(c(C * weights), lambda * rep(1,n))
   } else {
-    obj_fn <- c(C * weights) 
+    obj_fn <- c(dist_to_mu * weights) 
   }
   
   model$obj        <- obj_fn
