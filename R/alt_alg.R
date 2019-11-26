@@ -36,7 +36,7 @@ alt_alg <- function(coords, weights, k, N = 10, range = as.numeric(bounds(weight
     #  cat(paste("\nLap ", i, "\n-------\n", sep = ""))
     #}
     temp <- prob_clust(data = coords,
-                       weights = w,
+                       weights = weights,
                        k = k,
                        prior_dist = "uniform",
                        range = c(range[1], range[2]),
