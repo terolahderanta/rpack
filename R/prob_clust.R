@@ -18,9 +18,6 @@
 #' @param fixed_mu Predetermined center locations.
 #' @param frac_memb If TRUE memberships are fractional.
 #' @param gurobi_params A list of parameters for gurobi function e.g. time limit, number of threads.
-#' @param dist_mat Distance matrix for all the points. 
-#' @param predet_locations Choose centers only from predetermined locations.
-#' @param print_output Print details: 0 = nothing, 1 = simple, 2 = steps, 3 = complex.
 #' @return A list containting the new cluster allocations for each object in data,
 #' the new cluster center locations and maximum of the objective function.
 #' @export
@@ -39,10 +36,7 @@ prob_clust <- function(data,
                        place_to_point = TRUE,
                        fixed_mu = NULL,
                        frac_memb = FALSE,
-                       gurobi_params = NULL,
-                       dist_mat = NULL,
-                       predet_locations = NULL,
-                       print_output = 1) {
+                       gurobi_params = NULL) {
   
   # Check arguments
   assertthat::assert_that(is.matrix(data) || is.data.frame(data), msg = "data must be a matrix or a data.frame!")
@@ -105,10 +99,7 @@ prob_clust <- function(data,
           lambda = lambda,
           place_to_point = place_to_point,
           frac_memb = frac_memb,
-          gurobi_params = gurobi_params,
-          dist_mat = dist_mat,
-          predet_locations = predet_locations,
-          print_output = print_output
+          gurobi_params = gurobi_params
         )  
     } else {
       # Call function prob_clust_simple
