@@ -30,6 +30,7 @@ library(rpack)
 library(tidyverse)
 library(dplyr)
 library(ggplot2)
+library(LaplacesDemon)
 ```
 
 
@@ -41,8 +42,8 @@ Let's set up some data to be clustered.
 
 set.seed(112)
 
-# Generating 300 points from mixture of 10 normal distributions.
-test_dat <- simulate_normal_mixture(n = 300, k = 10)
+# Generating 200 points from mixture of 10 normal distributions.
+test_dat <- simulate_normal_mixture(n = 200, k = 10)
 
 ggplot(data = test_dat, aes(x = x, y = y, size = w)) +
   geom_point() +
@@ -208,7 +209,7 @@ clust3 <- alt_alg(
 ```
 
 Plot the clusters.
-```{r uniform_clusterplot_euc_dist, echo=TRUE, include=TRUE}
+```{r uniform_clusterplot_euc_dist_plot, echo=TRUE, include=TRUE}
 plot_clusters(
   coords = test_dat[,1:2],
   weights = test_dat$w,
@@ -223,7 +224,7 @@ plot_clusters(
 
 Previously we allowed cluster heads to be one of the demand points. In this example we give all the possible cluster head locations as an input to the algorithm. 
 
-```{r uniform_clustering_euc_dist, include=TRUE, echo = TRUE}
+```{r uniform_clustering_predet_loc, include=TRUE, echo = TRUE}
 
 # Pre-determined cluster head locations
 predet_loc <- dplyr::tibble(x = rep(seq(from = -10, to = 10, by = 4), times = 6),
@@ -265,15 +266,15 @@ L <- (pr_mean - pr_width)
 U <- (pr_mean + pr_width)
 
 # Alternaring algorithm
-clust4 <- alt_alg(
-  coords = dplyr::select(test_dat, x, y),
-  weights = test_dat$w,
-  N = 2,
-  k = k,
-  range = c(L, U),
-  place_to_point = TRUE,
-  predet_locations = predet_loc
-)
+#clust4 <- alt_alg(
+#  coords = dplyr::select(test_dat, x, y),
+#  weights = test_dat$w,
+#  N = 2,
+#  k = k,
+#  range = c(L, U),
+#  place_to_point = TRUE,
+#  predet_locations = predet_loc
+#)
 
 ```
 
