@@ -22,7 +22,7 @@
 #' @keywords internal
 prob_clust_gurobi <- function(data, weights, k, init_mu, L, U, capacity_weights = weights, 
                               d = euc_dist2, fixed_mu = NULL, lambda = NULL, place_to_point = TRUE, 
-                              frac_memb = FALSE, gurobi_params = NULL, dist_mat = NULL){
+                              frac_memb = FALSE, gurobi_params = NULL, dist_mat = NULL, multip_mu = rep(1, nrow(data))){
   
   # Number of objects in data
   n <- nrow(data)
@@ -63,7 +63,8 @@ prob_clust_gurobi <- function(data, weights, k, init_mu, L, U, capacity_weights 
                                          d = d,
                                          frac_memb = frac_memb,
                                          gurobi_params = gurobi_params,
-                                         dist_mat = dist_mat)
+                                         dist_mat = dist_mat,
+                                         multip_mu = multip_mu)
     assign_frac <- temp_allocation[[1]]
     obj_max <- temp_allocation[[2]]
     
@@ -109,7 +110,8 @@ prob_clust_gurobi <- function(data, weights, k, init_mu, L, U, capacity_weights 
 #' @return New cluster allocations for each object in data and the maximum of the objective function.
 #' @keywords internal
 allocation_gurobi <- function(data, weights, mu, k, L, U, capacity_weights = weights, lambda = NULL,
-                              d = euc_dist2, frac_memb = FALSE, gurobi_params = NULL, dist_mat = NULL){
+                              d = euc_dist2, frac_memb = FALSE, gurobi_params = NULL, dist_mat = NULL,
+                              multip_mu = rep(1, nrow(data))){
   
   # Number of objects in data
   n <- nrow(data)
@@ -118,7 +120,14 @@ allocation_gurobi <- function(data, weights, mu, k, L, U, capacity_weights = wei
   is_outgroup <- !is.null(lambda)
   
   # Number of decision variables
-  n_decision <- ifelse(is_outgroup, n * k + n, n * k)
+  if(is_outgroup){
+    n_decision <- n * k + n
+    
+  } else{
+    n_decision <- n * k
+    
+  }
+  
   
   if(is.null(dist_mat)){
     C <- matrix(0, ncol = k, nrow = n)
@@ -141,31 +150,47 @@ allocation_gurobi <- function(data, weights, mu, k, L, U, capacity_weights = wei
   L <- (L/max_w)*multip
   U <- (U/max_w)*multip
   
-  
-  # First constraint
-  const1 <- NULL
-  for (i in 1:n) {
-    const1 <- c(const1, as.numeric(rep(1:n == i, ifelse(is_outgroup, k + 1, k))))
-  }
-  
-  # Second constraint
-  const2 <- NULL
-  temp <- c(t(matrix(1, ncol = n, nrow = k) * 1:k))
-  for (i in 1:k) {
-    const2 <- c(const2, as.numeric(temp == i, n)*capacity_weights, rep(0, ifelse(is_outgroup, n, 0)))
-  }
-  
-  # Third constraint
-  const3 <- const2
-  
   # Gurobi-model
   model <- list()
   
-  # Constraint matrix A
-  model$A          <- matrix(c(const1, const2, const3), 
-                             nrow=n + 2*k, 
-                             ncol=n_decision, 
-                             byrow=T)
+  # Constrains 2 and  3
+  const23 <- Matrix::spMatrix(nrow = k, ncol = n_decision, 
+                      i = rep(1:k, each = n),
+                      j = 1:(n*k),
+                      x = rep(weights, k))
+  
+  # Add constraints 1, 2 and 3 to model
+  model$A <- rbind(Matrix::spMatrix(nrow = n, ncol = n_decision, 
+                            i = rep(1:n, times = ifelse(is_outgroup, k + 1, k)),
+                            j = rep(1:n_decision),
+                            x = rep(1, n_decision)),
+                   const23,
+                   const23
+  )
+  # First constraint
+  #const1 <- NULL
+  #for (i in 1:n) {
+  #  const1 <- c(const1, as.numeric(rep(1:n == i, ifelse(is_outgroup, k + 1, k))))
+  #}
+  #
+  ## Second constraint
+  #const2 <- NULL
+  #temp <- c(t(matrix(1, ncol = n, nrow = k) * 1:k))
+  #for (i in 1:k) {
+  #  const2 <- c(const2, as.numeric(temp == i, n)*capacity_weights, rep(0, ifelse(is_outgroup, n, 0)))
+  #}
+  #
+  ## Third constraint
+  #const3 <- const2
+  #
+  ## Gurobi-model
+  #model <- list()
+  #
+  ## Constraint matrix A
+  #model$A          <- matrix(c(const1, const2, const3), 
+  #                           nrow=n + 2*k, 
+  #                           ncol=n_decision, 
+  #                           byrow=T)
   
   # Outgroup penalty
   if(is_outgroup){
@@ -183,7 +208,7 @@ allocation_gurobi <- function(data, weights, mu, k, L, U, capacity_weights = wei
   
   model$modelsense <- 'min'
   
-  model$rhs        <- c(rep(1, n), 
+  model$rhs        <- c(multip_mu, 
                         rep(L, k), 
                         rep(U, k))
   

@@ -36,7 +36,8 @@ prob_clust <- function(data,
                        place_to_point = TRUE,
                        fixed_mu = NULL,
                        frac_memb = FALSE,
-                       gurobi_params = NULL) {
+                       gurobi_params = NULL,
+                       multip_mu = rep(1, nrow(data))) {
   
   # Check arguments
   assertthat::assert_that(is.matrix(data) || is.data.frame(data), msg = "data must be a matrix or a data.frame!")
@@ -99,7 +100,8 @@ prob_clust <- function(data,
           lambda = lambda,
           place_to_point = place_to_point,
           frac_memb = frac_memb,
-          gurobi_params = gurobi_params
+          gurobi_params = gurobi_params,
+          multip_mu = multip_mu
         )  
     } else {
       # Call function prob_clust_simple

@@ -20,7 +20,8 @@
 #' @examples
 alt_alg <- function(coords, weights, k, N = 10, range = as.numeric(bounds(weights, k, radius = 100)),
                     capacity_weights = weights, d = euc_dist2, mu_initialization = NULL, lambda = NULL,
-                    frac_memb = FALSE, place_to_point = TRUE, fixed_mu = NULL, gurobi_params = NULL){
+                    frac_memb = FALSE, place_to_point = TRUE, fixed_mu = NULL, gurobi_params = NULL,
+                    multip_mu = rep(1, nrow(coords))){
   
   init_mu <- NULL
   print_output <- 1
@@ -47,7 +48,8 @@ alt_alg <- function(coords, weights, k, N = 10, range = as.numeric(bounds(weight
                        place_to_point = place_to_point,
                        frac_memb = frac_memb,
                        fixed_mu = fixed_mu,
-                       gurobi_params = gurobi_params)
+                       gurobi_params = gurobi_params,
+                       multip_mu = multip_mu)
     
     if(i == 1){
       min_obj <- temp$obj

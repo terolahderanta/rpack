@@ -28,9 +28,14 @@ First, load the necessary libraries. In addition to the `rpack` package, we use
 ```{r, echo=TRUE, results='hide', message=FALSE, warning=FALSE}
 library(rpack)
 library(tidyverse)
-library(dplyr)
-library(ggplot2)
 library(LaplacesDemon)
+library(Matrix)
+library(plotly)
+c_col = c("blue","red","green","orange","hotpink","cyan","yellowgreen","purple",
+          "chocolate","darkred","yellow3","darkgreen","bisque4","magenta",
+          "royalblue","tomato4","steelblue1",
+          "seagreen4","orangered","darkblue","khaki3","lavender","deeppink2",
+          "coral3","beige","brown4","indianred1","lightgreen","orchid")
 ```
 
 
@@ -45,7 +50,10 @@ set.seed(112)
 # Generating 200 points from mixture of 10 normal distributions.
 test_dat <- simulate_normal_mixture(n = 200, k = 10)
 
-ggplot(data = test_dat, aes(x = x, y = y, size = w)) +
+# Ids in interactive plot
+id <-  1:nrow(test_dat)
+
+plot_sim <- ggplot(data = test_dat, aes(x = x, y = y, size = w, label = id)) +
   geom_point() +
   scale_size(range = c(2, 6)) +  # Scale objects sizes
   guides(
@@ -60,6 +68,8 @@ ggplot(data = test_dat, aes(x = x, y = y, size = w)) +
     axis.text.y = ggplot2::element_blank(),
     axis.ticks = ggplot2::element_blank()
   )
+
+ggplotly(plot_sim, tooltip = c("id", "w"))
 
 ```
 
@@ -125,7 +135,7 @@ plot_clusters(
   clusters = test_dat$cl,
   mu = mu,
   title = paste("Capacitated clustering, k = ", k, sep = ""),
-  subtitle = paste("Uniform prior in [", L, ", ", U, "] on cluster weights", sep = "")
+  subtitle = paste("Uniform prior in [", L, ", ", U, "] on cluster sizes", sep = "")
 )
 ```
 
@@ -172,7 +182,7 @@ plot_clusters(
   clusters = clust2$clusters,
   mu = clust2$centers,
   title = paste("Capacitated clustering, k = ", k, sep = ""),
-  subtitle = paste("Uniform prior in [", L, ", ", U, "] on cluster weights", sep = "")
+  subtitle = paste("Uniform prior in [", L, ", ", U, "] on cluster sizes", sep = "")
 )
 ```
 
@@ -216,11 +226,11 @@ plot_clusters(
   clusters = clust3$clusters,
   mu = clust3$centers,
   title = paste("Capacitated clustering, k = ", k, sep = ""),
-  subtitle = paste("Uniform prior in [", L, ", ", U, "] on cluster weights", sep = "")
+  subtitle = paste("Uniform prior in [", L, ", ", U, "] on cluster sizes", sep = "")
 )
 ```
 
-## Clustering with pre-determined center locations.
+## Clustering with pre-determined center locations (MISSING)
 
 Previously we allowed cluster heads to be one of the demand points. In this example we give all the possible cluster head locations as an input to the algorithm. 
 
@@ -280,15 +290,95 @@ U <- (pr_mean + pr_width)
 
 Plot the clusters. Small crosses refer to all the possible cluster center locations.
 ```{r clusterplot_predet_loc, echo=TRUE, include=TRUE}
+#plot_clusters(
+#  coords = test_dat[,1:2],
+#  weights = test_dat$w,
+#  clusters = clust4$clusters,
+#  mu = clust4$centers,
+#  title = paste("Capacitated clustering, k = ", k, sep = ""),
+#  subtitle = paste("Uniform prior in [", L, ", ", U, "] on cluster sizes", sep = "")
+#) + 
+#  geom_point(data = predet_loc, 
+#             mapping = aes(x = x, y = y),
+#             shape = 4)
+```
+
+## Clustering with reliability.
+
+
+```{r uniform_clustering_reliability, include=TRUE, echo = TRUE}
+
+# Number of clusters
+k <- 10
+
+# Mean
+pr_mean <- round(sum(test_dat$w) / k)
+
+# Max radius for prior
+pr_width <- 100
+
+# Lower und upper limit for cluster size
+L <- (pr_mean - pr_width)
+U <- (pr_mean + pr_width)
+
+# Ids of the points to be assigned to multiple clusters
+multip_id <- c(42, 153, 190, 83, 171)
+
+# n-length vector to indicate the number of centers a point is assigned to.
+multip_mu <- rep(1, nrow(test_dat))
+
+# Selected points are assigned to two clusters
+multip_mu[multip_id] <- 2
+
+# Alternaring algorithm
+clust5 <- alt_alg(
+  coords = dplyr::select(test_dat, x, y),
+  weights = test_dat$w,
+  N = 2,
+  k = k,
+  range = c(L, U),
+  place_to_point = TRUE,
+  d = euc_dist2,
+  multip_mu = multip_mu
+)
+
+```
+
+Plot the clusters.
+```{r uniform_clusterplot_reliability_plot, echo=TRUE, include=TRUE}
+multip_data <- test_dat[multip_id,]
+
+multip_clust <- sapply(X = multip_id,
+                       FUN = function(x){which(clust5$assign_frac[x,] == 1)})
+multip_data$clust1 <- as.factor(multip_clust[1,])
+multip_data$clust2 <- as.factor(multip_clust[2,])
+
+
 plot_clusters(
   coords = test_dat[,1:2],
   weights = test_dat$w,
-  clusters = clust4$clusters,
-  mu = clust4$centers,
+  clusters = clust5$clusters,
+  mu = clust5$centers,
   title = paste("Capacitated clustering, k = ", k, sep = ""),
-  subtitle = paste("Uniform prior in [", L, ", ", U, "] on cluster weights", sep = "")
-) + 
-  geom_point(data = predet_loc, 
+  subtitle = paste("Uniform prior in [", L, ", ", U, "] on cluster sizes", sep = "")
+) +
+  geom_point(data = multip_data,
              mapping = aes(x = x, y = y),
-             shape = 4)
+             size = 6,
+             color = "black",
+             fill = "black",
+             shape = 23,
+             show.legend = FALSE)+
+  geom_point(data = multip_data,
+             mapping = aes(x = x, y = y, color = clust1, fill = clust2),
+             size = 3,
+             shape = 23,
+             stroke = 2,
+             show.legend = FALSE) + 
+  ggplot2::scale_fill_manual(  # Color theme for objects and legend title
+      values = c_col[unique(sort(as.numeric(levels(multip_data$clust2))[multip_data$clust2]))],
+      #name = "Cluster sizes:",
+      #labels = cl_sizes
+    )
+  
 ```
