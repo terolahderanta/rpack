@@ -139,7 +139,7 @@ allocation_gurobi <- function(data, weights, mu, k, L, U, capacity_weights = wei
   }
   
   # Multiplier for the normalized values
-  multip <- 1000
+  multip <- 1
   
   # Normalization
   C <- (C - min(C))/(max(C)- min(C))*multip
