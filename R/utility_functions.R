@@ -43,22 +43,25 @@ euc_dist2 <- function(x1, x2) sum((x1 - x2) ^ 2)
 #' @param d A distance metric.
 #' @return The medoid.
 #' @export
-medoid <- function(data, w = rep(1,nrow(data)), d = euc_dist2){
+medoid <- function(data,
+                   w = rep(1, nrow(data)),
+                   d = euc_dist2) {
   n <- nrow(data)
-  temp_medoid <- data[1,]
-  med <- temp_medoid
-  min_dist <- sum(w[-1] * apply(data[-1,], 1, FUN = d, x2 = data[1,]))
-  if(n > 1) {
-    for (i in 2:n) {
-      temp_medoid <- data[i,] 
-      temp_dist <- sum(w[-i] * apply(data[-i,], 1, FUN = d, x2 = temp_medoid))
-      if(temp_dist < min_dist) { 
-        min_dist <- temp_dist
-        med <- temp_medoid
-      }
-    }
+  if (n < 1) {
+    stop("Tried to calculate medoid from zero number of points! (rpack)")
   }
-  return(med)
+  if (n == 1) {
+    return(data[1, ])
+  }
+  
+  w_dists <- sapply(
+    1:n,
+    FUN = function(x) {
+      sum(w[-x] * apply(data[-x, ], 1, FUN = d, x2 = data[x, ]))
+    }
+  )
+  
+  return(data[which.min(w_dists), ])
 }
 
 
