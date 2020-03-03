@@ -7,20 +7,9 @@ c_col = c("blue","red","green","orange","hotpink","cyan","yellowgreen","purple",
 #' Calculate the mode of vector v
 #' @param v A vector.
 #' @return The mode.
-#' @export
 getmode <- function(v) {
   uniqv <- unique(v)
   uniqv[which.max(tabulate(match(v, uniqv)))]
-}
-
-#' Calculate the limits for cluster sizes based on the mean of weights.
-#' @param weights Weight vector.
-#' @param k A number of clusters.
-#' @param radius Width of the cluster size.
-#' @export
-bounds <- function(weights, k, radius = 100) {
-  mean_cluster_size <- sum(weights) / k
-  return(c(mean_cluster_size - radius, mean_cluster_size + radius))
 }
 
 #' Calculate the Euclidean distance between two points
@@ -42,7 +31,6 @@ euc_dist2 <- function(x1, x2) sum((x1 - x2) ^ 2)
 #' @param w Weights of the data points.
 #' @param d A distance metric.
 #' @return The medoid.
-#' @export
 medoid <- function(data,
                    w = rep(1, nrow(data)),
                    d = euc_dist2) {
@@ -64,6 +52,32 @@ medoid <- function(data,
   return(data[which.min(w_dists), ])
 }
 
+#' Calculate the medoid from distance matrix
+#' @param dist_mat Distance matrix for the data points.
+#' @param ids Ids for the points in distance matrix. Uses all of the points by default.  
+#' @param w Weights of the data points.
+#' @return The id for the medoid.
+medoid_dist_mat <- function(dist_mat,
+                            ids = 1:nrow(dist_mat),
+                            w = rep(1, nrow(dist_mat))) {
+  
+  # Exceptions
+  n <- nrow(dist_mat)
+  if (n < 1 | length(ids) == 0) {
+    stop("Tried to calculate medoid from zero number of points! (rpack)")
+  }
+  if (n == 1 | length(ids) == 1) {
+    return(ids[1])
+  }
+  
+  # Weighted distances from the given set of points
+  wdists <- dist_mat[ids, ids] * w[ids]
+  
+  # Calculate column sums
+  wdist_to_centers <- colSums(wdists)
+  
+  return(ids[which.min(wdist_to_centers)])
+}
 
 #' Kmeans++
 #'
@@ -82,7 +96,6 @@ medoid <- function(data,
 #'
 #' @param X A matrix or a data frame containing the objects, one per row.
 #' @param k Number of clusters.
-#' @export
 kmpp <- function(X, k) {
 
   if (!is.matrix(X)) X <- as.matrix(X)  # X must be a matrix
