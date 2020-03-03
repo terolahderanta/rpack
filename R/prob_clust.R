@@ -20,7 +20,6 @@
 #' @param gurobi_params A list of parameters for gurobi function e.g. time limit, number of threads.
 #' @return A list containting the new cluster allocations for each object in data,
 #' the new cluster center locations and maximum of the objective function.
-#' @export
 prob_clust <- function(data,
                        weights,
                        k,

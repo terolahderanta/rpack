@@ -271,22 +271,51 @@ location_gurobi <- function(data, assign_frac, weights, k, fixed_mu = NULL, d = 
   }
   
   # Update mu for each cluster
-  for (i in (ifelse(n_fixed > 0, n_fixed + 1, 1)):k) {
-    
-    if(place_to_point){
+  #for (i in (ifelse(n_fixed > 0, n_fixed + 1, 1)):k) {
+  #  
+  #  if(place_to_point){
+  #    # Compute medoids only with points that are relevant in the cluster i
+  #    relevant_cl <- assign_frac[, i] > 0.001
+  #    
+  #    # Computing medoids for cluster i
+  #    #   New weights are combined from assignment fractionals and weights
+  #    mu[i,] <- as.matrix(medoid(data = data[relevant_cl,],
+  #                               w = assign_frac[relevant_cl, i] * weights[relevant_cl],
+  #                               d = d))
+  #  } else {
+  #    # Weighted mean
+  #    mu[i,] <- colSums(data * weights * assign_frac[, i]) / sum(assign_frac[, i]*weights)
+  #  }
+  #}
+  
+  #setup parallel backend to use many processors
+  cores <- detectCores()
+  cl <- makeCluster(cores[1]-1) # not to overload your computer
+  registerDoParallel(cl)
+  
+  # Update mu for each cluster
+  if(place_to_point){
+    mu <- foreach(i = (ifelse(n_fixed > 0, n_fixed + 1, 1)):k, .combine = rbind) %dopar% {
       # Compute medoids only with points that are relevant in the cluster i
       relevant_cl <- assign_frac[, i] > 0.001
       
       # Computing medoids for cluster i
       #   New weights are combined from assignment fractionals and weights
-      mu[i,] <- as.matrix(medoid(data = data[relevant_cl,],
+      temp_mu <- as.matrix(medoid(data = data[relevant_cl,],
                                  w = assign_frac[relevant_cl, i] * weights[relevant_cl],
                                  d = d))
-    } else {
+      # rbind the temp_mus
+      temp_mu
+    }
+  } else {
+    for (i in (ifelse(n_fixed > 0, n_fixed + 1, 1)):k) {
       # Weighted mean
-      mu[i,] <- colSums(data * weights * assign_frac[, i]) / sum(assign_frac[, i]*weights)
+      mu[i,] <- colSums(data * weights * assign_frac[, i]) / sum(assign_frac[, i] * weights)
     }
   }
+
+  #stop cluster
+  stopCluster(cl)
   
   
   return(mu)
