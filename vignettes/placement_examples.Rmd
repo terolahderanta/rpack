@@ -120,7 +120,7 @@ U <- pr_mean + pr_width
 N <- 20
 
 # Alternaring algorithm
-clust1 <- alt_alg2(
+clust1 <- alt_alg(
   coords = test_dat %>% select(x, y),
   k = k,
   N = N,
@@ -173,7 +173,7 @@ U <- pr_mean + pr_width
 N <- 20
 
 # Alternaring algorithm
-clust2 <- alt_alg2(
+clust2 <- alt_alg(
   coords = test_dat %>% select(x, y),
   k = k,
   N = N,
@@ -202,21 +202,26 @@ plot_cl2
 
 Compare the two different clusterings.
 ```{r example_plot_12, echo=TRUE, include=TRUE}
-ggarrange(plot_cl1, plot_cl2, ncol = 2, nrow = 1)
+plot_cl1
+plot_cl2
 ```
 
 
 ## Clustering with outgroup extension.
 
 Similarly, cluster the data into $k=10$ clusters. In addition, add outgroup for the data points. Outgroup consists of points that can be seen as outliers from other points and are not allocated to any of the clusters. 
-
-```{r example_3, include=TRUE, echo = TRUE}
-
+```{r outlier_data, include = TRUE, echo = TRUE}
 # Add some artificial outliers to the data
 test_dat_out <- test_dat %>% 
+  select(x, y, w, orig_group) %>% 
   add_row(x = 0.2, y = 7, w = 50, orig_group = as.factor(99)) %>% 
   add_row(x = 4, y = 10, w = 50, orig_group = as.factor(99)) %>% 
   add_row(x = -8, y = -6, w = 50, orig_group = as.factor(99))
+
+```
+
+
+```{r example_3, include = TRUE, echo = TRUE}
 
 # Number of clusters
 k <- 10
@@ -225,7 +230,7 @@ k <- 10
 pr_mean <- round(sum(test_dat_out$w) / k)
 
 # Max radius for prior
-pr_width <- 250
+pr_width <- 300
 
 # Lower und upper limit for cluster size
 L <- (pr_mean - pr_width)
@@ -235,10 +240,10 @@ U <- (pr_mean + pr_width)
 lambda1 <- 0.04
 
 # Alternaring algorithm
-clust3 <- alt_alg2(
+clust3 <- alt_alg(
   coords = dplyr::select(test_dat_out, x, y),
   weights = test_dat_out$w,
-  N = 20,
+  N = 10,
   k = k,
   range = c(L, U),
   lambda = lambda1
@@ -287,16 +292,15 @@ ranges <- matrix(c(range_small, range_large),
                  nrow = 2)
 
 # Number of iterations
-N <- 20
+N <- 10
 
 # Alternaring algorithm
-clust4 <- alt_alg2(
+clust4 <- alt_alg(
   coords = test_dat %>% select(x, y),
   k = k,
   N = N,
   weights = test_dat %>% pull(w),
-  range = ranges,
-  parallel = FALSE
+  range = ranges
 )
 
 # Save the results of the clustering
@@ -361,7 +365,7 @@ U <- pr_mean + pr_width
 N <- 20
 
 # Alternaring algorithm
-clust5 <- alt_alg2(
+clust5 <- alt_alg(
   coords = test_dat %>% select(x, y),
   k = k,
   N = N,
@@ -498,7 +502,7 @@ multip_mu[multip_id] <- 2
 #  place_to_point = TRUE,
 #  d = euc_dist2,
 #  multip_mu = multip_mu
-)
+#)
 
 ```
 
