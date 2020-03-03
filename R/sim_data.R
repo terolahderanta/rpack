@@ -30,7 +30,6 @@ simulate_data <- function(n, w_dist_params = c(1, 100), coord_dist = "uniform", 
 #'
 #' @param no_corr Is there correlation between x and y? 
 #' @return Covariance matrix.
-#' @export
 #'
 #' @examples
 random_sigma <- function(no_corr = TRUE){
@@ -82,7 +81,8 @@ simulate_normal_mixture <- function(n, k, w_dist_params = c(1, 100), w_dist = "u
   # Weights
   w <- floor(runif(n, min = w_dist_params[1], max = w_dist_params[2] + 1))
   
-  return(data.frame(x = coords[,1],
+  return(data.frame(id = 1:length(coords[,1]),
+                    x = coords[,1],
                     y = coords[,2],
                     w = w,
                     orig_group = as.factor(orig_group)))
