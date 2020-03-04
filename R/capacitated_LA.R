@@ -498,12 +498,14 @@ location_step <- function(coords,
           } else if (d(0, 2) == 4) {
             # Weighted mean
             temp_center <-
-              as.matrix(colSums(coords * weights * assign_frac[, i]) / sum(assign_frac[, i] * weights))
+              matrix(colSums(coords * weights * assign_frac[, i]) / sum(assign_frac[, i] * weights), ncol = 2)
           }
           
           # rbind the temp_center
           temp_center
         }
+      
+      center_ids <- NULL
     }
     
     # Stop cluster
