@@ -433,10 +433,6 @@ location_step <- function(coords,
                           dist_mat = NULL,
                           parallel = FALSE) {
   
-  
-  # Matrix for cluster centers
-  #centers <- matrix(0, nrow = k, ncol = ncol(coords))
-  
   # Number of fixed centers
   n_fixed <- ifelse(is.null(fixed_centers), 0, nrow(fixed_centers))
   
@@ -459,57 +455,63 @@ location_step <- function(coords,
                      rep(0, k - n_fixed))
     }
   }
-  #if(n_fixed > 0){
-  #  # Insert the fixed mu first
-  #  for(i in 1:n_fixed){
-  #    mu[i,] <- fixed_mu[i,]
-  #  }
-  #}
   
   # Use parallel computing
-  if(parallel) {
+  if (parallel) {
     # Setup parallel backend to use all but one processor
     cores <- detectCores()
     cl <- makeCluster(cores[1] - 1)
     registerDoParallel(cl)
     
+    if (n_fixed > 0) {
+      stop("Can't use fixed centers and parallel together.... yet (rpack)")
+    }
+    
     # Update center of each cluster
     if (place_to_point) {
-      centers <-
-        foreach(i = (ifelse(n_fixed > 0, n_fixed + 1, 1)):k, .combine = rbind) %dopar% {
+      center_ids <-
+        foreach(i = (n_fixed + 1):k, .combine = rbind) %dopar% {
           # Compute medoids only with points that are relevant in the cluster i
           relevant_cl <- assign_frac[, i] > 0.001
           
-          # Computing medoids for cluster i
-          temp_centers <-
-            as.matrix(rpack::medoid(
-              data = coords[relevant_cl,],
-              w = assign_frac[relevant_cl, i] * weights[relevant_cl],
-              d = d
-            ))
-          # rbind the temp_mus
-          temp_centers
+          # Computing medoid ids for cluster i
+          temp_center_id <- medoid_dist_mat(dist_mat = dist_mat,
+                                            ids = which(relevant_cl),
+                                            w = weights)
+          
+          # rbind the temp_center
+          temp_center_id
         }
-    } else {
-      # Matrix for cluster centers
-      centers <- matrix(0, nrow = k, ncol = ncol(coords))
       
-      for (i in (ifelse(n_fixed > 0, n_fixed + 1, 1)):k) {
-        # Weighted mean
-        centers[i,] <-
-          colSums(coords * weights * assign_frac[, i]) / sum(assign_frac[, i] * weights)
-      }
+      # Decide centers from the ids
+      centers <- coords[center_ids, ]
+      
+    } else {
+      centers <-
+        foreach(i = (n_fixed + 1):k, .combine = rbind) %dopar% {
+          # Check whether euc_dist or euc_dist2 is used
+          if (d(0, 2) == 2) {
+            # Weighted median
+            temp_center <-
+              as.matrix(Gmedian::Weiszfeld(coords, weights = weights * assign_frac[, i])$median)
+            
+          } else if (d(0, 2) == 4) {
+            # Weighted mean
+            temp_center <-
+              as.matrix(colSums(coords * weights * assign_frac[, i]) / sum(assign_frac[, i] * weights))
+          }
+          
+          # rbind the temp_center
+          temp_center
+        }
     }
     
-    #stop cluster
+    # Stop cluster
     stopCluster(cl)
     
   } else {
-    
-
     # Update center for each cluster
-    if(place_to_point){
-      
+    if (place_to_point) {
       #for (i in (ifelse(n_fixed > 0, n_fixed + 1, 1)):k) {
       for (i in (n_fixed + 1):k) {
         # Compute medoids only with points that are relevant in the cluster i
@@ -522,27 +524,26 @@ location_step <- function(coords,
       }
       
       # Decide centers from the ids
-      centers <- coords[center_ids,]
+      centers <- coords[center_ids, ]
       
     } else {
       for (i in (ifelse(n_fixed > 0, n_fixed + 1, 1)):k) {
-        
         # Check whether euc_dist or euc_dist2 is used
-        if(d(0,2) == 2){
+        if (d(0, 2) == 2) {
           # Weighted median
-          centers[i,] <- 
+          centers[i, ] <-
             Gmedian::Weiszfeld(coords, weights = weights * assign_frac[, i])$median
-        
-        } else if(d(0,2) == 4){
+          
+        } else if (d(0, 2) == 4) {
           # Weighted mean
-          centers[i,] <-
+          centers[i, ] <-
             colSums(coords * weights * assign_frac[, i]) / sum(assign_frac[, i] * weights)
         }
       }
       
       center_ids <- NULL
     }
-
+    
   }
   
   return(list(centers = centers, center_ids = center_ids))
