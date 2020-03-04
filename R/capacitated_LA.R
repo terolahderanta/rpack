@@ -500,11 +500,12 @@ location_step <- function(coords,
             temp_center <-
               matrix(colSums(coords * weights * assign_frac[, i]) / sum(assign_frac[, i] * weights), ncol = 2)
           }
-          
+          print(temp_center)
           # rbind the temp_center
           temp_center
         }
       
+      print(centers)
       center_ids <- NULL
     }
     
