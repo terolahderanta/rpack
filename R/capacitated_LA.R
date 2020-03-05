@@ -469,26 +469,30 @@ location_step <- function(coords,
     
     # Update center of each cluster
     if (place_to_point) {
+      
+      center_ids <- rep(0,k)
+      
       center_ids <-
-        foreach(i = (n_fixed + 1):k, .combine = rbind) %dopar% {
+        foreach(i = (n_fixed + 1):k, .combine = rbind, .packages = "Matrix") %dopar% {
           # Compute medoids only with points that are relevant in the cluster i
           relevant_cl <- assign_frac[, i] > 0.001
           
           # Computing medoid ids for cluster i
-          temp_center_id <- medoid_dist_mat(dist_mat = dist_mat,
+          temp_center_id <- c(medoid_dist_mat(dist_mat = dist_mat,
                                             ids = which(relevant_cl),
-                                            w = weights)
+                                            w = weights))
           
           # rbind the temp_center
           temp_center_id
         }
+      
       
       # Decide centers from the ids
       centers <- coords[center_ids, ]
       
     } else {
       centers <-
-        foreach(i = (n_fixed + 1):k, .combine = rbind) %dopar% {
+        foreach(i = (n_fixed + 1):k, .combine = rbind, .packages = "Matrix") %dopar% {
           # Check whether euc_dist or euc_dist2 is used
           if (d(0, 2) == 2) {
             # Weighted median
@@ -496,16 +500,16 @@ location_step <- function(coords,
               as.matrix(Gmedian::Weiszfeld(coords, weights = weights * assign_frac[, i])$median)
             
           } else if (d(0, 2) == 4) {
+            
             # Weighted mean
             temp_center <-
-              matrix(colSums(coords * weights * assign_frac[, i]) / sum(assign_frac[, i] * weights), ncol = 2)
+              colSums(coords * weights * assign_frac[, i]) / sum(assign_frac[, i] * weights)
           }
-          print(temp_center)
+          
           # rbind the temp_center
-          temp_center
+          matrix(temp_center, ncol = 2)
         }
       
-      print(centers)
       center_ids <- NULL
     }
     
