@@ -200,12 +200,6 @@ plot_cl2 <- plot_clusters(
 plot_cl2
 ```
 
-Compare the two different clusterings.
-```{r example_plot_12, echo=TRUE, include=TRUE}
-plot_cl1
-plot_cl2
-```
-
 
 ## Clustering with outgroup extension.
 
