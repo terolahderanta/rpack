@@ -40,15 +40,12 @@ alt_alg <- function(coords,
                      dist_mat = NULL,
                      print_output = 1){
   
-  # Print the information about run
-  if(print_output == 1){
-    cat(paste("Progress (N = ", N,"):\n", sep = ""))
-    cat(paste("______________________________\n"))
-    progress_bar <- 0
-  }
-  
   # Calculate distance matrix
   if(is.null(dist_mat) & place_to_point){
+    
+    if(print_output == 1){
+      cat(paste("Creating distance matrix... ", sep = ""))
+    }
     
     # Calculate distances with distance metric d
     dist_mat <- apply(
@@ -64,6 +61,10 @@ alt_alg <- function(coords,
       }
     )
     
+    if(print_output == 1){
+      cat(paste("Matrix created!\n", sep = ""))
+    }
+    
     # Normalizing distances
     dist_mat <- dist_mat / max(dist_mat)
   } else {
@@ -78,6 +79,12 @@ alt_alg <- function(coords,
   # Normalization for the weights
   weights <- weights/max(weights)
   
+  # Print the information about run
+  if(print_output == 1){
+    cat(paste("Progress (N = ", N,"):\n", sep = ""))
+    cat(paste("______________________________\n"))
+    progress_bar <- 0
+  }
   
   for (i in 1:N) {
     
