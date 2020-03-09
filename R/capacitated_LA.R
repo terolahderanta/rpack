@@ -106,7 +106,10 @@ capacitated_LA <- function(coords,
     old_centers <- centers
     
     # Print detailed steps
-    if(print_output == "steps"){cat("A-step... ")}
+    if(print_output == "steps"){
+      cat("A-step... ")
+      temp_time <- Sys.time()
+    }
     
     # Clusters in equally weighted data (Allocation-step)
     temp_alloc <- allocation_step(
@@ -126,13 +129,18 @@ capacitated_LA <- function(coords,
     )
     
     # Print detailed steps
-    if(print_output == "steps"){cat("Done!\n")}
+    if(print_output == "steps"){
+      cat(paste("Done! (", format(round(Sys.time() - temp_time, digits = 3), nsmall = 3), ")\n", sep = ""))
+    }
     
     # Save the value of the objective function
     obj_min <- temp_alloc$obj_min
-    
+
     # Print detailed steps
-    if(print_output == "steps"){cat("L-step... ")}
+    if(print_output == "steps"){
+      cat("L-step... ")
+      temp_time <- Sys.time()
+    }
     
     # Updating cluster centers (Parameter-step)
     temp_loc <- location_step(
@@ -148,7 +156,9 @@ capacitated_LA <- function(coords,
     )
     
     # Print detailed steps
-    if(print_output == "steps"){cat("Done!\n")}
+    if(print_output == "steps"){
+      cat(paste("Done! (", format(round(Sys.time() - temp_time, digits = 3), nsmall = 3), ")\n", sep = ""))
+    }
     
     centers <- temp_loc$centers
     

@@ -16,7 +16,7 @@
 #' @param multip_centers Vector (n-length) defining how many centers a point is allocated to.
 #' @param parallel Logical indicator to use parallel computing.
 #' @param dist_mat Distance matrix for all the points. 
-#' @param print_output Different types of printing outputs, 1 is default, 2 stepwise-print and 3 is full print.
+#' @param print_output Different types of printing outputs, "progress" is default and "steps" stepwise-print.
 #'
 #' @return Clustering object with allocation, center locations and the value of the objective function
 #' @export
@@ -38,15 +38,15 @@ alt_alg <- function(coords,
                      multip_centers = rep(1, nrow(coords)),
                      parallel = FALSE,
                      dist_mat = NULL,
-                     print_output = 1){
+                     print_output = "progress"){
   
   # Calculate distance matrix
   if(is.null(dist_mat) & place_to_point){
     
-    if(print_output >= 1){
-      n <- nrow(coords)
-      cat(paste("Creating ", n, "x", n ," distance matrix... ", sep = ""))
-    }
+    # Print information about the distance matrix
+    n <- nrow(coords)
+    cat(paste("Creating ", n, "x", n ," distance matrix... ", sep = ""))
+    temp_mat_time <- Sys.time()
     
     # Calculate distances with distance metric d
     dist_mat <- apply(
@@ -62,9 +62,7 @@ alt_alg <- function(coords,
       }
     )
     
-    if(print_output >= 1){
-      cat(paste("Matrix created!\n", sep = ""))
-    }
+    cat(paste("Matrix created! (", round(Sys.time() - temp_mat_time) ," secs)\n", sep = ""))
     
     # Normalizing distances
     dist_mat <- dist_mat / max(dist_mat)
@@ -72,9 +70,6 @@ alt_alg <- function(coords,
     dist_mat <- NULL
   }
   
-  if(print_output == 2){
-    cat(paste("Normalizing distance matrix... ", sep = ""))
-  }
   # Normalization for the capacity weights
   max_cap_w <- max(capacity_weights)
   capacity_weights <- capacity_weights/max_cap_w
@@ -83,12 +78,8 @@ alt_alg <- function(coords,
   # Normalization for the weights
   weights <- weights/max(weights)
   
-  if(print_output == 2){
-    cat(paste("Matrix normalized!\n", sep = ""))
-  }
-  
   # Print the information about run
-  if(print_output == 1){
+  if(print_output == "progress"){
     cat(paste("Progress (N = ", N,"):\n", sep = ""))
     cat(paste("______________________________\n"))
     progress_bar <- 0
@@ -96,8 +87,9 @@ alt_alg <- function(coords,
   
   for (i in 1:N) {
     
-    if(print_output == 2){
-      cat(paste("\nIteration ", i, "\n-------------------\n", sep = ""))
+    if(print_output == "steps"){
+      cat(paste("\nIteration ", i, "\n---------------------------\n", sep = ""))
+      temp_iter_time <- Sys.time()
     }
     
     # One clustering
@@ -116,7 +108,7 @@ alt_alg <- function(coords,
                                  gurobi_params = gurobi_params,
                                  multip_centers = multip_centers,
                                  parallel = parallel,
-                                 print_output = "steps")
+                                 print_output = print_output)
     
     # Save the first iteration as the best one
     if(i == 1){
@@ -125,10 +117,16 @@ alt_alg <- function(coords,
     }
     
     # Print the number of completed laps
-    if(print_output == 1 & (floor((i/N)*30) > progress_bar)){
-      cat(paste0(rep("#", floor((i/N)*30) - progress_bar), collapse = ""))  
-      progress_bar <- floor((i/N)*30)
-    } 
+    if(print_output == "progress") {
+      if((floor((i / N) * 30) > progress_bar)) {
+        cat(paste0(rep("#", floor((
+          i / N
+        ) * 30) - progress_bar), collapse = ""))
+        progress_bar <- floor((i / N) * 30)
+      }
+    } else if(print_output == "steps"){
+      cat(paste("Total time: ", round(Sys.time() - temp_iter_time), " secs\n", sep = ""))
+    }
     
     # Save the iteration with the lowest value of objective function
     if(temp_clust$obj < min_obj){
