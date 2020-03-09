@@ -33,8 +33,8 @@ library(ggpubr)
 #library(LaplacesDemon)
 #library(Matrix)
 #library(plotly)
-library(doParallel)
-library(foreach)
+#library(doParallel)
+#library(foreach)
 c_col = c("blue","red","green","orange","hotpink","cyan","yellowgreen","purple",
           "chocolate","darkred","yellow3","darkgreen","bisque4","magenta",
           "royalblue","tomato4","steelblue1",
