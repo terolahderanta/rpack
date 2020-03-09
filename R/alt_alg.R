@@ -43,7 +43,7 @@ alt_alg <- function(coords,
   # Calculate distance matrix
   if(is.null(dist_mat) & place_to_point){
     
-    if(print_output == 1){
+    if(print_output >= 1){
       n <- nrow(coords)
       cat(paste("Creating ", n, "x", n ," distance matrix... ", sep = ""))
     }
@@ -62,7 +62,7 @@ alt_alg <- function(coords,
       }
     )
     
-    if(print_output == 1){
+    if(print_output >= 1){
       cat(paste("Matrix created!\n", sep = ""))
     }
     
@@ -72,6 +72,9 @@ alt_alg <- function(coords,
     dist_mat <- NULL
   }
   
+  if(print_output == 2){
+    cat(paste("Normalizing distance matrix... ", sep = ""))
+  }
   # Normalization for the capacity weights
   max_cap_w <- max(capacity_weights)
   capacity_weights <- capacity_weights/max_cap_w
@@ -79,6 +82,10 @@ alt_alg <- function(coords,
   
   # Normalization for the weights
   weights <- weights/max(weights)
+  
+  if(print_output == 2){
+    cat(paste("Matrix normalized!\n", sep = ""))
+  }
   
   # Print the information about run
   if(print_output == 1){
@@ -90,7 +97,7 @@ alt_alg <- function(coords,
   for (i in 1:N) {
     
     if(print_output == 2){
-      cat(paste("\nIteration ", i, "\n----------\n", sep = ""))
+      cat(paste("\nIteration ", i, "\n-------------------\n", sep = ""))
     }
     
     # One clustering
@@ -108,7 +115,8 @@ alt_alg <- function(coords,
                                  fixed_centers = fixed_centers,
                                  gurobi_params = gurobi_params,
                                  multip_centers = multip_centers,
-                                 parallel = parallel)
+                                 parallel = parallel,
+                                 print_output = "steps")
     
     # Save the first iteration as the best one
     if(i == 1){

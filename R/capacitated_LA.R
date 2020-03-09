@@ -19,6 +19,7 @@
 #' @param dist_mat Distance matrix for all the points. 
 #' @param multip_centers Vector (n-length) defining how many centers a point is allocated to. 
 #' @param parallel Should parallel computing be used?
+#' @param print_output Print options, default is NULL. One option is "steps" which prints information about steps.
 #' @return A list containing cluster allocation, cluster center and the current value of the objective function.
 #' @keywords internal
 capacitated_LA <- function(coords,
@@ -35,7 +36,8 @@ capacitated_LA <- function(coords,
                            gurobi_params = NULL, 
                            dist_mat = NULL,
                            multip_centers = rep(1, nrow(coords)),
-                           parallel = FALSE){
+                           parallel = FALSE,
+                           print_output = NULL){
   
   # Number of objects in data
   n <- nrow(coords)
@@ -103,6 +105,9 @@ capacitated_LA <- function(coords,
     # Old mu is saved to check for convergence
     old_centers <- centers
     
+    # Print detailed steps
+    if(print_output == "steps"){cat("A-step... ")}
+    
     # Clusters in equally weighted data (Allocation-step)
     temp_alloc <- allocation_step(
       coords = coords,
@@ -120,8 +125,14 @@ capacitated_LA <- function(coords,
       multip_centers = multip_centers
     )
     
+    # Print detailed steps
+    if(print_output == "steps"){cat("Done!\n")}
+    
     # Save the value of the objective function
     obj_min <- temp_alloc$obj_min
+    
+    # Print detailed steps
+    if(print_output == "steps"){cat("L-step... ")}
     
     # Updating cluster centers (Parameter-step)
     temp_loc <- location_step(
@@ -135,6 +146,9 @@ capacitated_LA <- function(coords,
       dist_mat = dist_mat,
       parallel = parallel
     )
+    
+    # Print detailed steps
+    if(print_output == "steps"){cat("Done!\n")}
     
     centers <- temp_loc$centers
     
