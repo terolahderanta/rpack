@@ -1,10 +1,10 @@
 ---
-title: "Capacitated Placement"
+title: "rpack: Placement with capacitated k-family"
 author: "Tero Lähderanta, Lauri Lovén, Leena Ruha"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Capacitated Placement}
+  %\VignetteIndexEntry{Placement with capacitated k-family}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -23,23 +23,12 @@ This vignette provides a tutorial on main functionality of the `rpack` package.
 ## Libraries
 
 First, load the necessary libraries. In addition to the `rpack` package, we use 
-`tidyverse` and `dplyr` for sample data manipulation and  `ggplot2` for plotting.
+`tidyverse` for sample data manipulation and plotting.
 
 ```{r, echo=TRUE, results='hide', message=FALSE, warning=FALSE}
 library(rpack)
-#source("R/capacitated_LA.R")
 library(tidyverse)
-library(ggpubr)
-#library(LaplacesDemon)
-#library(Matrix)
 #library(plotly)
-#library(doParallel)
-#library(foreach)
-c_col = c("blue","red","green","orange","hotpink","cyan","yellowgreen","purple",
-          "chocolate","darkred","yellow3","darkgreen","bisque4","magenta",
-          "royalblue","tomato4","steelblue1",
-          "seagreen4","orangered","darkblue","khaki3","lavender","deeppink2",
-          "coral3","beige","brown4","indianred1","lightgreen","orchid")
 ```
 
 
@@ -139,12 +128,13 @@ Plot the clusters with `plot_clusters`.
 ```{r example_plot_1, echo=TRUE, include=TRUE}
 plot_cl1 <- plot_clusters(
   coords = test_dat %>% select(x,y),
-  weights = test_dat$w,
-  clusters = test_dat$cl1,
-  mu = centers1,
+  weights = test_dat %>% pull(w),
+  clusters = test_dat %>% pull(cl1),
+  centers = centers1,
   title = paste("Capacitated clustering, k = ", k, ", squread Euclidean distance", sep = ""),
   subtitle = paste("Uniform prior in [", L, ", ", U, "] on cluster sizes", sep = "")
 )
+
 
 plot_cl1
 ```
@@ -190,9 +180,9 @@ centers2 <- clust2$centers
 # Plot the clusters
 plot_cl2 <- plot_clusters(
   coords = test_dat %>% select(x,y),
-  weights = test_dat$w,
-  clusters = test_dat$cl2,
-  mu = centers2,
+  weights = test_dat %>% pull(w),
+  clusters = test_dat %>% pull(cl2),
+  centers = centers2,
   title = paste("Capacitated clustering, k = ", k, ", Euclidean distance", sep = ""),
   subtitle = paste("Uniform prior in [", L, ", ", U, "] on cluster sizes", sep = "")
 )
@@ -206,11 +196,23 @@ plot_cl2
 Similarly, cluster the data into $k=10$ clusters. In addition, add outgroup for the data points. Outgroup consists of points that can be seen as outliers from other points and are not allocated to any of the clusters. 
 ```{r outlier_data, include = TRUE, echo = TRUE}
 # Add some artificial outliers to the data
-test_dat_out <- test_dat %>% 
-  select(x, y, w, orig_group) %>% 
-  add_row(x = 0.2, y = 7, w = 50, orig_group = as.factor(99)) %>% 
-  add_row(x = 4, y = 10, w = 50, orig_group = as.factor(99)) %>% 
-  add_row(x = -8, y = -6, w = 50, orig_group = as.factor(99))
+outlier_dat <- tibble(x = c(0.2, 4, -8),
+                      y = c(7, 10, -6),
+                      w = c(50, 50, 50),
+                      orig_group = rep(factor(99), 3))
+
+test_dat_out <- full_join(test_dat, outlier_dat)
+
+# Plot the data with outliers
+plot_dat_out <- ggplot() +
+  geom_point(data = outlier_dat,
+             mapping = aes(x = x, y = y, size = w),
+             color = "red") +
+    geom_point(data = test_dat,
+             mapping = aes(x = x, y = y, size = w)) +
+  ggtitle("New data with outlier points")
+
+plot_dat_out
 
 ```
 
@@ -249,10 +251,10 @@ centers3 <- clust3$centers
 
 # Plot the clusters. Outgroup points are labeled as "NA"
 plot_cl3 <- plot_clusters(
-  coords = test_dat_out[,1:2],
-  weights = test_dat_out$w,
-  clusters = test_dat_out$cl3,
-  mu = centers3,
+  coords = test_dat_out %>% select(x,y),
+  weights = test_dat_out %>% pull(w),
+  clusters = test_dat_out %>% pull(cl3),
+  centers = centers3,
   title = paste("Capacitated clustering, k = ", k, sep = ""),
   subtitle = paste("Uniform prior in [", L, ", ", U, "] on cluster sizes", sep = "")
 )
@@ -304,9 +306,9 @@ centers4 <- clust4$centers
 # Plot the clusters
 plot_cl4 <- plot_clusters(
   coords = test_dat %>% select(x,y),
-  weights = test_dat$w,
-  clusters = test_dat$cl4,
-  mu = centers4,
+  weights = test_dat %>% pull(w),
+  clusters = test_dat %>% pull(cl4),
+  centers = centers4,
   title = paste("Capacitated clustering, k = ", k, ", Euclidean distance", sep = ""),
   subtitle = paste("Ranges [", ranges[1,1], ", ", ranges[1,2], "] and [", ranges[2,1], ", ", ranges[2,2], "] for cluster sizes", sep = "")
 )
@@ -375,9 +377,9 @@ centers5 <- clust5$centers
 # Plot the clusters
 plot_cl5 <- plot_clusters(
   coords = test_dat %>% select(x,y),
-  weights = test_dat$w,
-  clusters = test_dat$cl5,
-  mu = centers5,
+  weights = test_dat %>% pull(w),
+  clusters = test_dat %>% pull(cl5),
+  centers = centers5,
   title = paste("Capacitated clustering, k = ", k, ", Euclidean distance", sep = ""),
   subtitle = paste("Uniform prior in [", L, ", ", U, "] on cluster sizes", sep = "")
 )
@@ -441,9 +443,9 @@ multip_data$clust2 <- as.factor(multip_clust[2,])
 
 plot_clusters(
   coords = test_dat %>% select(x,y),
-  weights = test_dat$w,
+  weights = test_dat %>% pull(w),
   clusters = clust6$clusters,
-  mu = centers6,
+  centers = centers6,
   title = paste("Capacitated clustering, k = ", k, sep = ""),
   subtitle = paste("Uniform prior in [", L, ", ", U, "] on cluster sizes", sep = "")
 ) +

@@ -112,18 +112,22 @@ plot_hull <- function(data, cl_obj, fixed = NULL, title = "", alpha = 0.4, frac_
 #' @param coords Coordinates of the data points.
 #' @param weights The weigths of the objects in data.
 #' @param clusters A vector of cluster assignments for each data point.
-#' @param mu The parameters (locations) that define the k distributions.
+#' @param centers The centers of the clusters.
 #' @param title Set the title of the plot.
 #' @param subtitle Set the subtitle of the plot.
 #' @export
-plot_clusters <- function(coords, weights, clusters, mu, title = "", subtitle = NULL){
+plot_clusters <- function(coords, weights, clusters, centers, title = "", subtitle = NULL){
   
   # x and y coordinates
+  coords <- as.matrix(coords)
   x <- coords[,1]
   y <- coords[,2]
-  
+         
   # The number of clusters
-  k <- nrow(mu)
+  k <- nrow(centers)
+  
+  # Transform centers into a matrix
+  centers <- as.matrix(centers)
   
   # Changing clusters to factors
   clusters <- as.factor(clusters)
@@ -171,8 +175,8 @@ plot_clusters <- function(coords, weights, clusters, mu, title = "", subtitle = 
       axis.ticks = ggplot2::element_blank()
     ) +
     ggplot2::geom_point(
-      mapping = ggplot2::aes(x = mu[,1], # Plot cluster centers
-                             y = mu[,2]),
+      mapping = ggplot2::aes(x = centers[,1], # Plot cluster centers
+                             y = centers[,2]),
       size = 3,
       col = "black",
       show.legend = FALSE,
