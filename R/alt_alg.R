@@ -62,7 +62,7 @@ alt_alg <- function(coords,
       }
     )
     
-    cat(paste("Matrix created! (", round(Sys.time() - temp_mat_time) ," secs)\n", sep = ""))
+    cat(paste("Matrix created! (", round(Sys.time() - temp_mat_time) ," secs)\n\n", sep = ""))
     
     # Normalizing distances
     dist_mat <- dist_mat / max(dist_mat)
@@ -83,12 +83,15 @@ alt_alg <- function(coords,
     cat(paste("Progress (N = ", N,"):\n", sep = ""))
     cat(paste("______________________________\n"))
     progress_bar <- 0
-  }
+  } 
+  
+  # Total iteration time
+  temp_total_time <- Sys.time()
   
   for (i in 1:N) {
     
     if(print_output == "steps"){
-      cat(paste("\nIteration ", i, "\n---------------------------\n", sep = ""))
+      cat(paste("\nIteration ", i, "/", N, "\n---------------------------\n", sep = ""))
       temp_iter_time <- Sys.time()
     }
     
@@ -125,7 +128,7 @@ alt_alg <- function(coords,
         progress_bar <- floor((i / N) * 30)
       }
     } else if(print_output == "steps"){
-      cat(paste("Total time: ", round(Sys.time() - temp_iter_time), " secs\n", sep = ""))
+      cat(paste("Iteration time: ", round(Sys.time() - temp_iter_time), " secs\n", sep = ""))
     }
     
     # Save the iteration with the lowest value of objective function
@@ -135,6 +138,11 @@ alt_alg <- function(coords,
     }
   }
   
-  cat("\n")
+  cat("\n\n")
+  
+  # Print total iteration time
+  cat(paste("Total iteration time: ", round(Sys.time() - temp_total_time)," secs\n", sep = ""))
+
+  
   return(best_clust)
 }
