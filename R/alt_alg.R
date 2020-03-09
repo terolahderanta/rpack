@@ -44,7 +44,8 @@ alt_alg <- function(coords,
   if(is.null(dist_mat) & place_to_point){
     
     if(print_output == 1){
-      cat(paste("Creating distance matrix... ", sep = ""))
+      n <- nrow(coords)
+      cat(paste("Creating ", n, "x", n ," distance matrix... ", sep = ""))
     }
     
     # Calculate distances with distance metric d
