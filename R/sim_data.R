@@ -53,7 +53,7 @@ simulate_data <- function(n,
 #'
 #' @param no_corr Is there correlation between x and y?
 #' @return Covariance matrix.
-#'
+#' @export
 #' @examples
 random_sigma <- function(no_corr = TRUE) {
   
