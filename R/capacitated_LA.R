@@ -82,6 +82,8 @@ capacitated_LA <- function(coords,
            centers <- init_kmpp$centers
            
            if(place_to_point){
+             
+             # TODO: This does not work and save total time in the list
              center_ids <- which((coords[,1] %in% centers[,1]) & 
                                  (coords[,2] %in% centers[,2]))
 
@@ -99,7 +101,7 @@ capacitated_LA <- function(coords,
   #print(fixed_center_ids)
   
   # Maximum number of laps
-  max_laps <- 50
+  max_laps <- 100
   
   for (iter in 1:max_laps) {
     # Old mu is saved to check for convergence
@@ -163,6 +165,11 @@ capacitated_LA <- function(coords,
     centers <- temp_loc$centers
     
     center_ids <- temp_loc$center_ids
+    
+    # Print a message showing that max number of iterations was reached
+    if(iter == max_laps){
+      cat(paste("WARNING! Reached maximum number of LA-iterations! Returning the clustering from last lap...\n",sep = ""))
+    }
     
     # If nothing is changing, stop
     if(all(old_centers == centers)) break
