@@ -76,18 +76,31 @@ capacitated_LA <- function(coords,
          # Pick initial centers with k-means++
          kmpp = {
            
-           # replicate data points according to their weight
-           weighted_coords <- apply(coords, 2, function(x) rep(x, weights))
+           # Replicate data points according to their weight
+           weighted_coords <- apply(coords, 2, function(x) rep(x, round(weights)))
+           
+           # Run k-means++
            init_kmpp <- kmpp(weighted_coords, k)
-           centers <- init_kmpp$centers
            
            if(place_to_point){
              
-             # TODO: This does not work and save total time in the list
-             center_ids <- which((coords[,1] %in% centers[,1]) & 
-                                 (coords[,2] %in% centers[,2]))
+             # Select closest points to the kmpp-result as the centers
+             center_ids <- apply(X = init_kmpp$centers, MARGIN = 1, FUN = function(x){
+               temp_dist_kmpp <- 
+                 apply(X = coords, MARGIN = 1, FUN = function(y){d(x,y)})
+               which.min(temp_dist_kmpp)
+             })
+             
+             # Do not choose the same point twice
+             ifelse(duplicated(center_ids),
+                    sample((1:n)[-center_ids],size = 1),
+                    center_ids)
+             
+             # Select the centers according to ids
+             centers <- coords[center_ids,]
 
            } else {
+             centers <- init_kmpp$centers
              center_ids <- NULL
            }
          },
@@ -167,7 +180,7 @@ capacitated_LA <- function(coords,
     center_ids <- temp_loc$center_ids
     
     # Print a message showing that max number of iterations was reached
-    if(iter == max_laps){
+    if(iter == max_laps & print_output == "steps"){
       cat(paste("WARNING! Reached maximum number of LA-iterations! Returning the clustering from last lap...\n",sep = ""))
     }
     
