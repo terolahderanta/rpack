@@ -30,6 +30,7 @@ euc_dist2 <- function(x1, x2) sum((x1 - x2) ^ 2)
 #' @param data A data.frame.
 #' @param w Weights of the data points.
 #' @param d A distance metric.
+#' @export
 #' @return The medoid.
 medoid <- function(data,
                    w = rep(1, nrow(data)),
@@ -56,6 +57,7 @@ medoid <- function(data,
 #' @param dist_mat Distance matrix for the data points.
 #' @param ids Ids for the points in distance matrix. Uses all of the points by default.  
 #' @param w Weights of the data points.
+#' @export
 #' @return The id for the medoid.
 medoid_dist_mat <- function(dist_mat,
                             ids = 1:nrow(dist_mat),
@@ -96,6 +98,7 @@ medoid_dist_mat <- function(dist_mat,
 #'
 #' @param X A matrix or a data frame containing the objects, one per row.
 #' @param k Number of clusters.
+#' @export
 kmpp <- function(X, k) {
 
   if (!is.matrix(X)) X <- as.matrix(X)  # X must be a matrix
