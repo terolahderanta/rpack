@@ -169,6 +169,7 @@ clust2 <- alt_alg(
   N = N,
   weights = test_dat %>% pull(w),
   range = c(L, U),
+  center_init = "kmpp",
   d = euc_dist, # Euclidean distance
   place_to_point = TRUE # This is TRUE by default
 )
