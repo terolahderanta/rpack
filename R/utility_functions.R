@@ -1,4 +1,6 @@
-c_col = c("blue","red","green","orange","hotpink","cyan","yellowgreen","purple",
+#' Different colors for the plots
+#' @export
+c_col <- c("blue","red","green","orange","hotpink","cyan","yellowgreen","purple",
           "chocolate","darkred","yellow3","darkgreen","bisque4","magenta",
           "royalblue","tomato4","steelblue1",
           "seagreen4","orangered","darkblue","khaki3","lavender","deeppink2",
