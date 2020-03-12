@@ -49,8 +49,10 @@ capacitated_LA <- function(coords,
   if(n_fixed > 0){
     
     if(place_to_point){
-      fixed_center_ids <- which((coords[,1] %in% fixed_centers[,1]) & 
-                          (coords[,2] %in% fixed_centers[,2]))
+      fixed_center_ids <- which(
+          ((coords %>% pull(1)) %in% (fixed_centers %>% pull(1))) & 
+          ((coords %>% pull(2)) %in% (fixed_centers %>% pull(2)))
+      )
       
     } 
   } else {
@@ -107,11 +109,6 @@ capacitated_LA <- function(coords,
          
          stop("No such choice for center initialization! (rpack)")
   )
-
-  #print(dim(centers))
-  #print(center_ids)
-  #print(dim(fixed_centers))
-  #print(fixed_center_ids)
   
   # Maximum number of laps
   max_laps <- 100
@@ -494,9 +491,10 @@ location_step <- function(coords,
     
     # Add fixed centers first
     if(n_fixed > 0){
-      center_ids <-c(which((coords[,1] %in% fixed_centers[,1]) & 
-                           (coords[,2] %in% fixed_centers[,2])),
-                     rep(0, k - n_fixed))
+      center_ids <-c(which(
+          ((coords %>% pull(1)) %in% (fixed_centers %>% pull(1))) & 
+          ((coords %>% pull(2)) %in% (fixed_centers %>% pull(2)))
+      ), rep(0, k - n_fixed))
     }
   }
   
