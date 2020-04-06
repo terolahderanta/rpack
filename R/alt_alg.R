@@ -23,22 +23,24 @@
 #'
 #' @examples
 alt_alg <- function(coords, 
-                     weights, 
-                     k, 
-                     N = 10, 
-                     range = c(0, sum(weights)),
-                     capacity_weights = weights, 
-                     d = euc_dist2, 
-                     center_init = "random", 
-                     lambda = NULL,
-                     frac_memb = FALSE, 
-                     place_to_point = TRUE, 
-                     fixed_centers = NULL, 
-                     gurobi_params = NULL,
-                     multip_centers = rep(1, nrow(coords)),
-                     parallel = FALSE,
-                     dist_mat = NULL,
-                     print_output = "progress"){
+                    weights, 
+                    k, 
+                    N = 10, 
+                    range = c(min(weights)/2, sum(weights)),
+                    capacity_weights = weights, 
+                    d = euc_dist2, 
+                    center_init = "random", 
+                    lambda = NULL,
+                    frac_memb = FALSE, 
+                    place_to_point = TRUE, 
+                    fixed_centers = NULL, 
+                    gurobi_params = NULL,
+                    multip_centers = rep(1, nrow(coords)),
+                    parallel = FALSE,
+                    dist_mat = NULL,
+                    print_output = "progress",
+                    normalization = TRUE,
+                    lambda_fixed = NULL){
   
   # Calculate distance matrix
   if(is.null(dist_mat) & place_to_point){
@@ -65,18 +67,31 @@ alt_alg <- function(coords,
     cat(paste("Matrix created! (", format(round(Sys.time() - temp_mat_time)) ,")\n\n", sep = ""))
     
     # Normalizing distances
-    dist_mat <- dist_mat / max(dist_mat)
+    if(normalization){
+      dist_mat <- dist_mat / max(dist_mat)
+    }
+    
+  } else if(place_to_point){
+    
+    # Normalizing distances
+    if(normalization){
+      dist_mat <- dist_mat / max(dist_mat)
+    }
+    
   } else {
+    # If no distance matrix is used
     dist_mat <- NULL
   }
   
-  # Normalization for the capacity weights
-  max_cap_w <- max(capacity_weights)
-  capacity_weights <- capacity_weights/max_cap_w
-  range <- range/max_cap_w
-  
-  # Normalization for the weights
-  weights <- weights/max(weights)
+  if(normalization) {
+    # Normalization for the capacity weights
+    max_cap_w <- max(capacity_weights)
+    capacity_weights <- capacity_weights / max_cap_w
+    range <- range / max_cap_w
+    
+    # Normalization for the weights
+    weights <- weights / max(weights)
+  }
   
   # Print the information about run
   if(print_output == "progress"){
@@ -111,7 +126,8 @@ alt_alg <- function(coords,
                                  gurobi_params = gurobi_params,
                                  multip_centers = multip_centers,
                                  parallel = parallel,
-                                 print_output = print_output)
+                                 print_output = print_output,
+                                 lambda_fixed = lambda_fixed)
     
     # Save the first iteration as the best one
     if(i == 1){
