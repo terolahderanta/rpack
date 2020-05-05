@@ -83,6 +83,40 @@ medoid_dist_mat <- function(dist_mat,
   return(ids[which.min(wdist_to_centers)])
 }
 
+#' Calculate the medoid from distance matrix
+#' @param dist_mat Distance matrix for the data points.
+#' @param ids Ids for the points in distance matrix. Uses all of the points by default.  
+#' @param w Weights of the data points.
+#' @export
+#' @return The id for the medoid.
+medoid_dist_to_centers <- function(dist_to_centers,
+                            ids = 1:nrow(dist_to_centers),
+                            w = rep(1, nrow(dist_to_centers))) {
+  
+  # Exceptions
+  n <- nrow(dist_to_centers)
+  if (n < 1 | length(ids) == 0) {
+    stop("Tried to calculate medoid from zero number of points! (rpack)")
+  }
+
+  #cat("length of w-vector:")
+  #print(length(w[ids]))
+  #cat(paste("dist_to_center dimension in medoid:"))
+  #print(dim(dist_to_centers[ids,]))
+  
+  
+  # Weighted distances from the given set of points
+  wdists <- dist_to_centers[ids, ] * w[ids]
+  
+  # Calculate column sums
+  if(length(ids) == 1){
+    wdist_to_centers <- wdists
+  } else {
+    wdist_to_centers <- colSums(wdists)
+  }
+  return(which.min(wdist_to_centers))
+}
+
 #' Kmeans++
 #'
 #' Implementation of the K-means++ algorithm. Whereas normal kmeans selects all the initial center
