@@ -280,14 +280,14 @@ allocation_step <- function(coords,
         ncol = n_decision,
         i = rep(1:k, each = n),
         j = 1:(n * k),
-        x = rep(weights, k)
+        x = rep(capacity_weights, k)
       ),
       Matrix::spMatrix(
         nrow = k,
         ncol = n_decision,
         i = rep(1:k, each = n),
         j = 1:(n * k),
-        x = rep(weights, k)
+        x = rep(capacity_weights, k)
       )
     )
     
@@ -325,14 +325,14 @@ allocation_step <- function(coords,
         ncol = n_decision,
         i = c(rep(1:k, each = n), 1:k),
         j = c(1:(n * k), (n * k) + 1:k),
-        x = c(rep(weights, k), rep(M, k))
+        x = c(rep(capacity_weights, k), rep(M, k))
       ),
       Matrix::spMatrix(
         nrow = k,
         ncol = n_decision,
         i = c(rep(1:k, each = n), 1:k),
         j = c(1:(n * k), (n * k) + 1:k),
-        x = c(rep(weights, k), rep(-M, k))
+        x = c(rep(capacity_weights, k), rep(-M, k))
       )
     )
     
@@ -353,14 +353,14 @@ allocation_step <- function(coords,
           ncol = n_decision,
           i = c(rep(1:k, each = n), 1:k),
           j = c(1:(n * k), (n * k + k * (i - 1)) + 1:k),
-          x = c(rep(weights, k), rep(M, k))
+          x = c(rep(capacity_weights, k), rep(M, k))
         ),
         Matrix::spMatrix(
           nrow = k,
           ncol = n_decision,
           i = c(rep(1:k, each = n), 1:k),
           j = c(1:(n * k), (n * k + k * (i - 1)) + 1:k),
-          x = c(rep(weights, k), rep(-M, k))
+          x = c(rep(capacity_weights, k), rep(-M, k))
         )
       )
       
