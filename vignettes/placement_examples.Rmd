@@ -127,16 +127,27 @@ centers1 <- clust1$centers
 Plot the clusters with `plot_clusters`.
 ```{r example_plot_1, echo=TRUE, include=TRUE}
 plot_cl1 <- plot_clusters(
-  coords = test_dat %>% select(x,y),
+  coords = test_dat %>% select(x, y),
   weights = test_dat %>% pull(w),
   clusters = test_dat %>% pull(cl1),
   centers = centers1,
-  title = paste("Capacitated clustering, k = ", k, ", squread Euclidean distance", sep = ""),
+  title = paste(
+    "Capacitated clustering, k = ",
+    k,
+    ", squread Euclidean distance",
+    sep = ""
+  ),
   subtitle = paste("Uniform prior in [", L, ", ", U, "] on cluster sizes", sep = "")
 )
 
+plot_cl1_hull <- plot_hull(coords = test_dat %>% select(x, y),
+  weights = test_dat %>% pull(w),
+  clusters = test_dat %>% pull(cl1),
+  centers = centers1)
+
 
 plot_cl1
+plot_cl1_hull
 ```
 
 ## Clustering with different distance metric and add constraints for cluster head locations
@@ -517,31 +528,49 @@ pr_width <- 1000
 L <- (pr_mean - pr_width)
 U <- (pr_mean + pr_width)
 
+# Distance to pre-determined center location
+dist_to_centers <- apply(
+      X = predet_loc,
+      MARGIN = 1,
+      FUN = function(x) {
+        apply(
+          X = test_dat %>% select(x,y),
+          MARGIN = 1,
+          FUN = euc_dist,
+          x2 = x
+        )
+      }
+)
+
+# Number of columns is equal to number of predefined center locations
+dim(dist_to_centers)
+
 # Alternaring algorithm
-#clust4 <- alt_alg(
-#  coords = dplyr::select(test_dat, x, y),
-#  weights = test_dat$w,
-#  N = 2,
-#  k = k,
-#  range = c(L, U),
-#  place_to_point = TRUE,
-#  predet_locations = predet_loc
-#)
+clust_predet <- alt_alg_predet(
+  dist_to_centers = dist_to_centers,
+  weights = test_dat$w,
+  N = 20,
+  k = k,
+  range = c(L, U),
+  place_to_point = TRUE
+)
 
 ```
 
 Plot the clusters. Small crosses refer to all the possible cluster center locations.
 ```{r clusterplot_predet_loc, echo=TRUE, include=TRUE}
-#plot_clusters(
-#  coords = test_dat[,1:2],
-#  weights = test_dat$w,
-#  clusters = clust4$clusters,
-#  mu = clust4$centers,
-#  title = paste("Capacitated clustering, k = ", k, sep = ""),
-#  subtitle = paste("Uniform prior in [", L, ", ", U, "] on cluster sizes", sep = "")
-#) + 
-#  geom_point(data = predet_loc, 
-#             mapping = aes(x = x, y = y),
-#             shape = 4)
+clust_centers <- predet_loc %>% slice(clust_predet$center_ids) 
+
+plot_clusters(
+  coords = test_dat %>% select(x,y),
+  weights = test_dat$w,
+  clusters = clust_predet$clusters,
+  centers = clust_centers,
+  title = paste("Capacitated clustering, k = ", k, sep = ""),
+  subtitle = paste("Uniform prior in [", L, ", ", U, "] on cluster sizes", sep = "")
+) + 
+  geom_point(data = predet_loc, 
+             mapping = aes(x = x, y = y),
+             shape = 4)
 ```
 
