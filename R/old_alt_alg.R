@@ -15,8 +15,6 @@
 #' @param gurobi_params A list of parameters for gurobi function e.g. time limit, number of threads.
 #'
 #' @return Clustering object with allocation, center locations and the value of the objective function
-#'
-#' @examples
 old_alt_alg <- function(coords, weights, k, N = 10, range = as.numeric(bounds(weights, k, radius = 100)),
                     capacity_weights = weights, d = euc_dist2, mu_initialization = NULL, lambda = NULL,
                     frac_memb = FALSE, place_to_point = TRUE, fixed_mu = NULL, gurobi_params = NULL,

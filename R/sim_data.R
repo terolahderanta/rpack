@@ -7,8 +7,6 @@
 #'
 #' @return Data.frame of simulated data.
 #' @export
-#'
-#' @examples
 simulate_data <- function(n,
                           w_dist_params = c(1, 100),
                           coord_dist = "uniform",
@@ -54,7 +52,6 @@ simulate_data <- function(n,
 #' @param no_corr Is there correlation between x and y?
 #' @return Covariance matrix.
 #' @export
-#' @examples
 random_sigma <- function(no_corr = TRUE) {
   
   if (no_corr) {
@@ -82,8 +79,6 @@ random_sigma <- function(no_corr = TRUE) {
 #'
 #' @return Data.frame of simulated data.
 #' @export
-#'
-#' @examples
 simulate_normal_mixture <- function(n,
                                     k,
                                     w_dist_params = c(1, 100),
@@ -133,8 +128,6 @@ simulate_normal_mixture <- function(n,
 #'
 #' @return Data.frame of simulated data.
 #' @export
-#'
-#' @examples
 simulate_laplace_mixture <-
   function(n,
            k,

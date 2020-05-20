@@ -20,8 +20,6 @@
 #'
 #' @return Clustering object with allocation, center locations and the value of the objective function
 #' @export
-#'
-#' @examples
 alt_alg_predet <- function(dist_to_centers, 
                     weights, 
                     k, 

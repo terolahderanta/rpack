@@ -12,8 +12,6 @@
 #'
 #' @return ggplot object.
 #' @export
-#'
-#' @examples
 plot_hull <- function(coords, weights, clusters, centers, assign_frac = NULL, fixed = NULL, title = "", alpha = 0.4, frac_memb = FALSE) {
   
   font_size <- 15
