@@ -3,7 +3,7 @@
 #' @param dist_to_centers Distance matrix from demand points to the pre-defined center locations.
 #' @param weights Weights of the points in a vector.
 #' @param k Number of clusters.
-#' @param N Number of iterations.
+#' @param N Number of starting values.
 #' @param range Limits for the cluster size in a list.
 #' @param capacity_weights Different weights for capacity limits.
 #' @param d Distance function used in clustering.

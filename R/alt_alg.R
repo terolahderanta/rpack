@@ -3,7 +3,7 @@
 #' @param coords Coordinates of the data points.
 #' @param weights Weights of the points in a vector.
 #' @param k Number of clusters.
-#' @param N Number of iterations.
+#' @param N Number of starting values.
 #' @param range Limits for the cluster size in a list.
 #' @param capacity_weights Different weights for capacity limits.
 #' @param d Distance function used in clustering.
@@ -39,6 +39,27 @@ alt_alg <- function(coords,
                     print_output = "progress",
                     normalization = TRUE,
                     lambda_fixed = NULL){
+  
+  # Check arguments
+  assertthat::assert_that(is.matrix(coords) || is.data.frame(coords), msg = "coords must be a matrix or a data.frame!")
+  
+  assertthat::assert_that(nrow(coords) >= k, msg = "must have at least k coords points!")
+  assertthat::assert_that(is.numeric(weights), msg = "weights must be an numeric vector!")
+  assertthat::assert_that(is.numeric(capacity_weights), msg = "capacity weights must be an numeric vector!")
+  assertthat::assert_that(length(weights) == nrow(coords), msg = "coords and weight must have the same number of rows!")
+  assertthat::assert_that(length(capacity_weights) == nrow(coords), msg = "coords and capacity weights must have the same number of rows!")
+  assertthat::assert_that(is.numeric(k), msg = "k must be a numeric scalar!")
+  assertthat::assert_that(length(k) == 1, msg = "k must be a numeric scalar!")
+  
+  assertthat::assert_that(is.numeric(range))
+  assertthat::assert_that(length(range) == 2)
+  
+  if(!purrr::is_null(lambda)) assertthat::is.number(lambda)
+  if(!purrr::is_null(lambda_fixed)) assertthat::is.number(lambda_fixed)
+  
+  assertthat::assert_that(is.logical(normalization), msg = "normalization must be TRUE or FALSE!")
+  assertthat::assert_that(is.logical(frac_memb), msg = "frac_memb must be TRUE or FALSE!")
+  assertthat::assert_that(is.logical(place_to_point), msg = "place_to_point must be TRUE or FALSE!")
   
   # Calculate distance matrix
   if(is.null(dist_mat) & place_to_point){
