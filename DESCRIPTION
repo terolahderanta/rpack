@@ -16,8 +16,7 @@ Imports:
     tidyverse,
     assertthat,
     datastructures,
-    lpSolveAPI,
-    lpSolve,
+    gurobi,
     mvtnorm,
     pracma,
     ggplot2,
@@ -29,7 +28,6 @@ Suggests:
     testthat,
     roxygen2,
     knitr,
-    rmarkdown,
-    gurobi
+    rmarkdown
 RoxygenNote: 6.1.1
 VignetteBuilder: knitr
