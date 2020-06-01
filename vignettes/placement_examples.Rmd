@@ -483,7 +483,7 @@ plot_clusters(
 ```
 
 
-## Clustering with pre-determined center locations (MISSING)
+## Clustering with pre-determined center locations
 
 Previously we allowed cluster heads to be one of the demand points. In this example we give all the possible cluster head locations as an input to the algorithm. 
 
@@ -572,5 +572,89 @@ plot_clusters(
   geom_point(data = predet_loc, 
              mapping = aes(x = x, y = y),
              shape = 4)
+```
+
+## Clustering with mobility
+
+```{r create_mobility}
+
+n <- nrow(test_dat)
+
+# First form the distance matrix
+dis <- matrix(0, ncol = n, nrow = n)
+dis <- sapply(1:n, 
+      FUN = function(x) {
+        apply(test_dat %>% select(x,y), 
+              MARGIN = 1, 
+              FUN = euc_dist2, 
+              x2 = test_dat[x, 2:3]
+              )})
+
+# Mobility is represented via symmetric (n x n)-matrix
+#   - choose n smallest distances (n chosen to be 30) and sample approximately 10 % to have mobility
+#   - diagonal values are zero 
+set.seed(2)
+mob <- sapply(X = 1:n, FUN = function(x){
+  # nth smallest
+  #nth_smallest <- sort(dis[,x])[sample(1:8, size = 1)]
+  nth_smallest <- sort(dis[,x])[30]
+  rand <- runif(n)
+  (dis[,x] <= nth_smallest & dis[,x] > 0 & rand < 0.05)
+  })
+
+indices <- (which(mob, arr.ind = TRUE))
+
+# Turn logical values to numerical
+mob <- mob * runif(n = n*n, min = 1, max = 10)
+
+
+# Transform the row numbers to ids
+indices[,1] <- test_dat$id[indices[,1]]
+indices[,2] <- test_dat$id[indices[,2]]
+
+# Make a tibble
+mob_segment_data <- tibble(row = indices[,1], col = indices[,2]) %>% 
+  # Remove duplicates
+  filter(col != row) %>% 
+  # Add new columns to indicate coordinates of the segments
+  mutate(xstart = test_dat$x[row], ystart = test_dat$y[row], xend = test_dat$x[col], yend = test_dat$y[col]) 
+  
+# Plot points with mobility
+ggplot() +
+  geom_segment(data = mob_segment_data,
+               mapping = aes(x = xstart, y = ystart, xend = xend, yend = yend),
+               color = "red",
+               size = 1) + 
+  geom_point(data = test_dat,
+             mapping = aes(x = x, y = y, size = w)) 
+
+
+```
+
+```{r clust_mobility}
+# Number of clusters
+k <- 10
+
+# Mean
+pr_mean <- round(sum(test_dat$w) / k)
+
+# Cluster size width
+pr_width <- 250
+
+# Lower und upper limit for cluster size
+L <- pr_mean - pr_width
+U <- pr_mean + pr_width
+
+# Alternaring algorithm
+clust_mob <- alt_alg_mob(
+  coords = test_dat %>% select(x, y),
+  k = k,
+  N = 10,
+  print_output = "steps",
+  weights = test_dat %>% pull(w),
+  range = c(L, U),
+  mob = mob,
+  lambda_mob = 1
+)
 ```
 
