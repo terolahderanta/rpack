@@ -50,7 +50,6 @@ alt_alg <- function(coords,
   assertthat::assert_that(length(k) == 1, msg = "k must be a numeric scalar!")
   
   assertthat::assert_that(is.numeric(range))
-  assertthat::assert_that(length(range) == 2)
   
   if(!purrr::is_null(lambda)) assertthat::is.number(lambda)
   if(!purrr::is_null(lambda_fixed)) assertthat::is.number(lambda_fixed)
