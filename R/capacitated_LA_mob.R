@@ -18,8 +18,7 @@
 #' @param frac_memb If TRUE memberships are fractional.
 #' @param gurobi_params A list of parameters for gurobi function e.g. time limit, number of threads.
 #' @param dist_mat Distance matrix for all the points. 
-#' @param multip_centers Vector (n-length) defining how many centers a point is allocated to. 
-#' @param parallel Should parallel computing be used?
+#' @param multip_centers Vector (n-length) defining how many centers a point is allocated to.
 #' @param print_output Print options, default is NULL. One option is "steps" which prints information about steps.
 #' @return A list containing cluster allocation, cluster center and the current value of the objective function.
 #' @keywords internal
@@ -39,7 +38,6 @@ capacitated_LA_mob <- function(coords,
                            gurobi_params = NULL, 
                            dist_mat = NULL,
                            multip_centers = rep(1, nrow(coords)),
-                           parallel = FALSE,
                            print_output = NULL,
                            lambda_fixed = NULL){
   
@@ -170,7 +168,6 @@ capacitated_LA_mob <- function(coords,
       d = d,
       place_to_point = place_to_point,
       dist_mat = dist_mat,
-      parallel = parallel,
       lambda_fixed = lambda_fixed
     )
     
@@ -484,7 +481,6 @@ allocation_step_mob <- function(coords,
 #' @param d The distance function.
 #' @param place_to_point if TRUE, cluster centers will be placed to a point.
 #' @param dist_mat Distance matrix for all the points.
-#' @param parallel Logical indicator to use parallel computing.
 #' @return New cluster centers.
 #' @keywords internal
 location_step_mob <- function(coords,
@@ -495,7 +491,6 @@ location_step_mob <- function(coords,
                           d = euc_dist2,
                           place_to_point = TRUE,
                           dist_mat = NULL,
-                          parallel = FALSE,
                           lambda_fixed = NULL) {
   
   # Number of fixed centers
@@ -505,192 +500,121 @@ location_step_mob <- function(coords,
   centers <- matrix(0, nrow = k, ncol = ncol(coords))
   
   # Add fixed centers first
-  if(n_fixed > 0){
-    centers[1:n_fixed,] <- fixed_centers 
+  if (n_fixed > 0) {
+    centers[1:n_fixed, ] <- fixed_centers
   }
   
-  if(place_to_point){
+  if (place_to_point) {
     # Initialization of cluster id vector
     center_ids <- rep(0, k)
     
     # Add fixed centers first
-    if(n_fixed > 0){
-      center_ids <-c(which(
-        ((coords %>% pull(1)) %in% (fixed_centers %>% pull(1))) & 
-          ((coords %>% pull(2)) %in% (fixed_centers %>% pull(2)))
-      ), rep(0, k - n_fixed))
+    if (n_fixed > 0) {
+      center_ids <- c(which(((coords %>% pull(1)) %in% (fixed_centers %>% pull(1))
+      ) &
+        ((coords %>% pull(2)) %in% (fixed_centers %>% pull(2))
+        )), rep(0, k - n_fixed))
     }
   }
   
-  # Use parallel computing
-  if (parallel) {
-    # Setup parallel backend to use all but one processor
-    cores <- detectCores()
-    cl <- makeCluster(cores[1] - 1)
-    registerDoParallel(cl)
-    
-    if (n_fixed > 0) {
-      stop("Can't use fixed centers and parallel together.... yet (rpack)")
-    }
-    
-    # Update center of each cluster
-    if (place_to_point) {
+  # Update center for each cluster
+  if (place_to_point) {
+    # If fixed servers are allowed to be released
+    if (!is.null(lambda_fixed)) {
+      # Potential new centers
+      potential_center_ids <- rep(0, n_fixed)
       
-      center_ids <- rep(0,k)
+      # Ids for the fixed servers
+      fixed_center_ids <- which(((coords %>% pull(1)) %in% (fixed_centers %>% pull(1))) &
+                                  ((coords %>% pull(2)) %in% (fixed_centers %>% pull(2))))
       
-      center_ids <-
-        foreach(i = (n_fixed + 1):k, .combine = rbind, .packages = "Matrix") %dopar% {
-          # Compute medoids only with points that are relevant in the cluster i
-          relevant_cl <- assign_frac[, i] > 0.001
-          
-          # Computing medoid ids for cluster i
-          temp_center_id <- c(medoid_dist_mat(dist_mat = dist_mat,
-                                              ids = which(relevant_cl),
-                                              w = weights))
-          
-          # rbind the temp_center
-          temp_center_id
+      # Most optimal center location for the fixed center clusters
+      for (i in 1:n_fixed) {
+        # Compute medoids only with points that are relevant in the cluster i
+        relevant_cl <- assign_frac[, i] > 0.001
+        
+        relevant_ids <- which(relevant_cl)
+        
+        # Computing medoid ids for cluster i
+        potential_center_ids[i] <-
+          medoid_dist_mat(dist_mat = dist_mat,
+                          ids = relevant_ids,
+                          w = weights)
+        
+        # Combined distance to the potential center
+        wdist_pot_center <- sum(dist_mat[relevant_ids, potential_center_ids[i]] *
+                                  weights[relevant_ids])
+        
+        # Combined distance to the fixed center
+        wdist_fixed_center <- sum(dist_mat[relevant_ids, fixed_center_ids[i]] *
+                                    weights[relevant_ids])
+        
+        # TODO: add lambda_fixed to here
+        if (wdist_fixed_center > wdist_pot_center + lambda_fixed) {
+          center_ids[i] <- potential_center_ids[i]
         }
+        
+      }
       
+      # Decide the rest of the center locations
+      for (i in (n_fixed + 1):k) {
+        # Compute medoids only with points that are relevant in the cluster i
+        relevant_cl <- assign_frac[, i] > 0.001
+        
+        # Computing medoid ids for cluster i
+        center_ids[i] <- medoid_dist_mat(dist_mat = dist_mat,
+                                         ids = which(relevant_cl),
+                                         w = weights)
+      }
       
       # Decide centers from the ids
       centers <- coords[center_ids, ]
       
     } else {
-      centers <-
-        foreach(i = (n_fixed + 1):k, .combine = rbind, .packages = "Matrix") %dopar% {
-          # Check whether euc_dist or euc_dist2 is used
-          if (d(0, 2) == 2) {
-            # Weighted median
-            temp_center <-
-              as.matrix(Gmedian::Weiszfeld(coords, weights = weights * assign_frac[, i])$median)
-            
-          } else if (d(0, 2) == 4) {
-            
-            # Weighted mean
-            temp_center <-
-              colSums(coords * weights * assign_frac[, i]) / sum(assign_frac[, i] * weights)
-          }
-          
-          # rbind the temp_center
-          matrix(temp_center, ncol = 2)
-        }
+      for (i in (n_fixed + 1):k) {
+        # Compute medoids only with points that are relevant in the cluster i
+        relevant_cl <- assign_frac[, i] > 0.001
+        
+        # Computing medoid ids for cluster i
+        center_ids[i] <- medoid_dist_mat(dist_mat = dist_mat,
+                                         ids = which(relevant_cl),
+                                         w = weights)
+      }
       
-      center_ids <- NULL
+      # Decide centers from the ids
+      centers <- coords[center_ids, ]
     }
-    
-    # Stop cluster
-    stopCluster(cl)
-    
   } else {
-    # Update center for each cluster
-    if (place_to_point) {
-      
-      # If fixed servers are allowed to be released
-      if(!is.null(lambda_fixed)) {
+    for (i in (ifelse(n_fixed > 0, n_fixed + 1, 1)):k) {
+      # Check whether euc_dist or euc_dist2 is used
+      if (d(0, 2) == 2) {
+        w_assign <- weights * assign_frac[, i]
         
-        # Potential new centers
-        potential_center_ids <- rep(0,n_fixed)
-        
-        # Ids for the fixed servers
-        fixed_center_ids <- which(
-          ((coords %>% pull(1)) %in% (fixed_centers %>% pull(1))) & 
-            ((coords %>% pull(2)) %in% (fixed_centers %>% pull(2)))
-        )
-        
-        # Most optimal center location for the fixed center clusters
-        for(i in 1:n_fixed){
-          # Compute medoids only with points that are relevant in the cluster i
-          relevant_cl <- assign_frac[, i] > 0.001
+        # If only one point belongs to the cluster, the Weiszfeld algorithm won't work
+        if (sum(w_assign > 0) == 1) {
+          centers[i,] <- coords %>%
+            slice(which(w_assign > 0)) %>%
+            unlist(., use.names = FALSE)
           
-          relevant_ids <- which(relevant_cl)
+        } else {
+          # Weighted median
+          weiszfeld <-
+            Gmedian::Weiszfeld(coords, weights = w_assign)$median
           
-          # Computing medoid ids for cluster i
-          potential_center_ids[i] <- medoid_dist_mat(dist_mat = dist_mat,
-                                                     ids = relevant_ids,
-                                                     w = weights)
-          
-          # Combined distance to the potential center
-          wdist_pot_center <- sum(
-            dist_mat[relevant_ids, potential_center_ids[i]] * 
-              weights[relevant_ids]
-          )
-          
-          # Combined distance to the fixed center
-          wdist_fixed_center <- sum(
-            dist_mat[relevant_ids, fixed_center_ids[i]] * 
-              weights[relevant_ids]
-          )
-          
-          # TODO: add lambda_fixed to here
-          if(wdist_fixed_center > wdist_pot_center + lambda_fixed){
-            center_ids[i] <- potential_center_ids[i]
-          }
+          centers[i,] <- weiszfeld
           
         }
         
-        # Decide the rest of the center locations
-        for (i in (n_fixed + 1):k) {
-          
-          # Compute medoids only with points that are relevant in the cluster i
-          relevant_cl <- assign_frac[, i] > 0.001
-          
-          # Computing medoid ids for cluster i
-          center_ids[i] <- medoid_dist_mat(dist_mat = dist_mat,
-                                           ids = which(relevant_cl),
-                                           w = weights)
-        }
-        
-        # Decide centers from the ids
-        centers <- coords[center_ids,]
-        
-      } else {
-        
-        for (i in (n_fixed + 1):k) {
-          
-          # Compute medoids only with points that are relevant in the cluster i
-          relevant_cl <- assign_frac[, i] > 0.001
-          
-          # Computing medoid ids for cluster i
-          center_ids[i] <- medoid_dist_mat(dist_mat = dist_mat,
-                                           ids = which(relevant_cl),
-                                           w = weights)
-        }
-        
-        # Decide centers from the ids
-        centers <- coords[center_ids,]
+      } else if (d(0, 2) == 4) {
+        # Weighted mean
+        centers[i,] <-
+          colSums(coords * weights * assign_frac[, i]) / sum(assign_frac[, i] * weights)
       }
-    } else {
-      for (i in (ifelse(n_fixed > 0, n_fixed + 1, 1)):k) {
-        # Check whether euc_dist or euc_dist2 is used
-        if (d(0, 2) == 2) {
-          
-          w_assign <- weights * assign_frac[, i]
-          
-          # If only one point belongs to the cluster, the Weiszfeld algorithm won't work
-          if(sum(w_assign > 0) == 1){
-            centers[i, ] <- coords %>% 
-              slice(which(w_assign > 0)) %>% 
-              unlist(., use.names=FALSE)
-            
-          } else {
-            # Weighted median
-            weiszfeld <- Gmedian::Weiszfeld(coords, weights = w_assign)$median 
-            
-            centers[i, ] <- weiszfeld
-            
-          }
-          
-        } else if (d(0, 2) == 4) {
-          # Weighted mean
-          centers[i, ] <-
-            colSums(coords * weights * assign_frac[, i]) / sum(assign_frac[, i] * weights)
-        }
-      }
-      
-      center_ids <- NULL
     }
     
+    center_ids <- NULL
   }
+  
+  
   return(list(centers = centers, center_ids = center_ids))
 }

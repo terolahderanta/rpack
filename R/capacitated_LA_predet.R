@@ -17,8 +17,7 @@
 #' @param frac_memb If TRUE memberships are fractional.
 #' @param gurobi_params A list of parameters for gurobi function e.g. time limit, number of threads.
 #' @param dist_mat Distance matrix for all the points. 
-#' @param multip_centers Vector (n-length) defining how many centers a point is allocated to. 
-#' @param parallel Should parallel computing be used?
+#' @param multip_centers Vector (n-length) defining how many centers a point is allocated to.
 #' @param print_output Print options, default is NULL. One option is "steps" which prints information about steps.
 #' @return A list containing cluster allocation, cluster center and the current value of the objective function.
 #' @keywords internal
@@ -36,7 +35,6 @@ capacitated_LA_predet <- function(dist_to_centers,
                            gurobi_params = NULL, 
                            #dist_mat = NULL,
                            multip_centers = rep(1, nrow(dist_to_centers)),
-                           parallel = FALSE,
                            print_output = NULL,
                            lambda_fixed = NULL){
   
@@ -168,7 +166,6 @@ capacitated_LA_predet <- function(dist_to_centers,
       d = d,
       place_to_point = place_to_point,
       dist_mat = dist_mat,
-      parallel = parallel,
       lambda_fixed = lambda_fixed
     )
     
@@ -471,7 +468,6 @@ allocation_step_predet <- function(dist_to_centers,
 #' @param d The distance function.
 #' @param place_to_point if TRUE, cluster centers will be placed to a point.
 #' @param dist_mat Distance matrix for all the points.
-#' @param parallel Logical indicator to use parallel computing.
 #' @return New cluster centers.
 #' @keywords internal
 location_step_predet <- function(dist_to_centers,
@@ -482,7 +478,6 @@ location_step_predet <- function(dist_to_centers,
                                  d = euc_dist2,
                                  place_to_point = TRUE,
                                  dist_mat = NULL,
-                                 parallel = FALSE,
                                  lambda_fixed = NULL) {
   # Number of fixed centers
   n_fixed <- ifelse(is.null(fixed_centers), 0, nrow(fixed_centers))

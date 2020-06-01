@@ -15,7 +15,6 @@
 #' @param fixed_centers Possible fixed center locations.
 #' @param gurobi_params A list of parameters for gurobi function e.g. time limit, number of threads.
 #' @param multip_centers Vector (n-length) defining how many centers a point is allocated to.
-#' @param parallel Logical indicator to use parallel computing.
 #' @param dist_mat Distance matrix for all the points. 
 #' @param print_output Different types of printing outputs, "progress" is default and "steps" stepwise-print.
 #'
@@ -37,7 +36,6 @@ alt_alg_mob <- function(coords,
                     fixed_centers = NULL, 
                     gurobi_params = NULL,
                     multip_centers = rep(1, nrow(coords)),
-                    parallel = FALSE,
                     dist_mat = NULL,
                     print_output = "progress",
                     normalization = TRUE,
@@ -133,7 +131,6 @@ alt_alg_mob <- function(coords,
                                  fixed_centers = fixed_centers,
                                  gurobi_params = gurobi_params,
                                  multip_centers = multip_centers,
-                                 parallel = parallel,
                                  print_output = print_output,
                                  lambda_fixed = lambda_fixed)
     
