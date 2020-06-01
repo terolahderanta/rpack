@@ -577,8 +577,6 @@ location_step <- function(coords,
           weiszfeld <-
             Gmedian::Weiszfeld(coords, weights = w_assign)$median
           
-          centers[i,] <- weiszfeld
-          
         }
         
       } else if (d(0, 2) == 4) {
