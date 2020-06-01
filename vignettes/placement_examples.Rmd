@@ -646,15 +646,15 @@ L <- pr_mean - pr_width
 U <- pr_mean + pr_width
 
 # Alternaring algorithm
-clust_mob <- alt_alg_mob(
-  coords = test_dat %>% select(x, y),
-  k = k,
-  N = 10,
-  print_output = "steps",
-  weights = test_dat %>% pull(w),
-  range = c(L, U),
-  mob = mob,
-  lambda_mob = 1
-)
+#clust_mob <- alt_alg_mob(
+#  coords = test_dat %>% select(x, y),
+#  k = k,
+#  N = 10,
+#  print_output = "steps",
+#  weights = test_dat %>% pull(w),
+#  range = c(L, U),
+#  mob = mob,
+#  lambda_mob = 1
+#)
 ```
 
