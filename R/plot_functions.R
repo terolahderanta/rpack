@@ -66,6 +66,7 @@ plot_hull <- function(coords, weights, clusters, centers, assign_frac = NULL, fi
                            y = fixed[,2])
   }
   
+  # Calculate cluster sizes
   if(frac_memb){
     cl_sizes <- apply(
       X = t(1:k),
@@ -134,10 +135,11 @@ plot_hull <- function(coords, weights, clusters, centers, assign_frac = NULL, fi
 #' @param weights The weights of the objects in data.
 #' @param clusters A vector of cluster assignments for each data point.
 #' @param centers The centers of the clusters.
+#' @param frac_memb Is the clustering done with fractional membership. 
 #' @param title Set the title of the plot.
 #' @param subtitle Set the subtitle of the plot.
 #' @export
-plot_clusters <- function(coords, weights, clusters, centers, title = "", subtitle = NULL){
+plot_clusters <- function(coords, weights, clusters, centers, frac_memb = FALSE, title = "", subtitle = NULL){
   
   # x and y coordinates
   coords <- as.matrix(coords)
@@ -153,12 +155,23 @@ plot_clusters <- function(coords, weights, clusters, centers, title = "", subtit
   # Changing clusters to factors
   clusters <- as.factor(clusters)
   
-  # Cluster sizes
-  cl_sizes <- apply(
-    X = t(1:k),
-    MARGIN = 2,
-    FUN = function(x) { sum(weights[clusters == x]) }
-  )
+  # Calculate cluster sizes
+  if(frac_memb){
+    cl_sizes <- apply(
+      X = t(1:k),
+      MARGIN = 2,
+      FUN = function(x) { sum(weights*assign_frac[,x]) }
+    )
+  } else {
+    cl_sizes <- apply(
+      X = t(1:k),
+      MARGIN = 2,
+      FUN = function(x) { sum(weights[clusters == x]) }
+    )
+  }
+  
+  # Order the clusters from smallest to larger
+  order_incr <- order(cl_sizes)
   
   # Plot the clusters with ggplot
   plot <-
@@ -168,15 +181,15 @@ plot_clusters <- function(coords, weights, clusters, centers, title = "", subtit
         x = x,
         y = y,
         size = weights,
-        col = clusters
-      )
+        col = factor(clusters, levels = as.factor((1:k)[order_incr]))
+        )
     ) +
     ggplot2::scale_size(range = c(2, 7),        # Scale objects sizes
                         guide = FALSE) +
     ggplot2::scale_color_manual(  # Color theme for objects and legend title
       values = rep(c_col, times = 5),
       name = "Cluster sizes:",
-      labels = cl_sizes
+      labels = cl_sizes[order_incr]
     ) +
     ggplot2::guides(                            # Point size in legend
       color = ggplot2::guide_legend(
