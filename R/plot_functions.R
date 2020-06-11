@@ -16,11 +16,6 @@ plot_hull <- function(coords, weights, clusters, centers, assign_frac = NULL, fi
   
   font_size <- 15
   
-  # x and y coordinates
-  #coords <- as.matrix(coords)
-  #x <- coords[,1]
-  #y <- coords[,2]
-  
   # The number of points
   n <- nrow(coords)
   
