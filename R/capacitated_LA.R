@@ -6,6 +6,7 @@
 #' 
 #' @param coords A matrix or data.frame containing the coordinates.
 #' @param weights A vector of weights for each data point.
+#' @param params Extra parameters for clustering.
 #' @param k The number of clusters.
 #' @param ranges Lower and upper limits for the clustering
 #' @param capacity_weights Different weights for capacity limits.
@@ -19,17 +20,19 @@
 #' @param dist_mat Distance matrix for all the points. 
 #' @param multip_centers Vector (n-length) defining how many centers a point is allocated to. 
 #' @param print_output Print options, default is NULL. One option is "steps" which prints information about steps.
+#' @param lambda_fixed Lambda for releasing fixed centers.
 #' @return A list containing cluster allocation, cluster center and the current value of the objective function.
 #' @keywords internal
 capacitated_LA <- function(coords,
                            weights,
                            k,
                            ranges,
+                           params = NULL,  
                            capacity_weights = weights,
                            d = euc_dist2, 
                            center_init = NULL,
-                           fixed_centers = NULL, 
-                            lambda = NULL, 
+                           fixed_centers = NULL , 
+                           lambda = NULL, 
                            place_to_point = TRUE, 
                            frac_memb = FALSE, 
                            gurobi_params = NULL, 
@@ -48,10 +51,12 @@ capacitated_LA <- function(coords,
   if(n_fixed > 0){
     
     if(place_to_point){
-      fixed_center_ids <- which(
-          ((coords %>% pull(1)) %in% (fixed_centers %>% pull(1))) & 
-          ((coords %>% pull(2)) %in% (fixed_centers %>% pull(2)))
-      )
+      
+      fixed_center_ids <- prodlim::row.match(fixed_centers %>% as.data.frame(), coords %>% as.data.frame())
+      #fixed_center_ids <- which(
+      #  ((coords %>% pull(1)) %in% (fixed_centers %>% pull(1))) & 
+      #    ((coords %>% pull(2)) %in% (fixed_centers %>% pull(2)))
+      #)
       
     } 
   } else {
@@ -99,7 +104,7 @@ capacitated_LA <- function(coords,
              
              # Select the centers according to ids
              centers <- coords[center_ids,]
-
+             
            } else {
              centers <- init_kmpp$centers
              center_ids <- NULL
@@ -126,6 +131,7 @@ capacitated_LA <- function(coords,
     temp_alloc <- allocation_step(
       coords = coords,
       weights = weights,
+      params = params,
       k = k,
       centers = centers,
       ranges = ranges,
@@ -146,7 +152,7 @@ capacitated_LA <- function(coords,
     
     # Save the value of the objective function
     obj_min <- temp_alloc$obj_min
-
+    
     # Print detailed steps
     if(print_output == "steps"){
       cat("L-step... ")
@@ -158,6 +164,7 @@ capacitated_LA <- function(coords,
       coords = coords,
       weights = weights,
       k = k,
+      params = params,
       assign_frac = temp_alloc$assign_frac,
       fixed_centers = fixed_centers,
       d = d,
