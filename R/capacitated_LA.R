@@ -488,6 +488,7 @@ location_step <- function(coords,
                           weights,
                           k,
                           assign_frac,
+                          params = NULL,
                           fixed_centers = NULL,
                           d = euc_dist2,
                           place_to_point = TRUE,
@@ -511,10 +512,12 @@ location_step <- function(coords,
     
     # Add fixed centers first
     if (n_fixed > 0) {
-      center_ids <- c(which(((coords %>% pull(1)) %in% (fixed_centers %>% pull(1))
-      ) &
-        ((coords %>% pull(2)) %in% (fixed_centers %>% pull(2))
-        )), rep(0, k - n_fixed))
+      
+      center_ids <- prodlim::row.match(fixed_centers %>% as.data.frame(), coords %>% as.data.frame())
+      #center_ids <- c(which(((coords %>% pull(1)) %in% (fixed_centers %>% pull(1))
+      #) &
+      #  ((coords %>% pull(2)) %in% (fixed_centers %>% pull(2))
+      #  )), rep(0, k - n_fixed))
     }
   }
   
@@ -572,45 +575,55 @@ location_step <- function(coords,
       centers <- coords[center_ids, ]
       
     } else {
-      for (i in (n_fixed + 1):k) {
-        # Compute medoids only with points that are relevant in the cluster i
-        relevant_cl <- assign_frac[, i] > 0.001
-        
-        # Computing medoid ids for cluster i
-        center_ids[i] <- medoid_dist_mat(dist_mat = dist_mat,
-                                         ids = which(relevant_cl),
-                                         w = weights)
+      
+      if(n_fixed < k){
+        for (i in (n_fixed + 1):k) {
+          # Compute medoids only with points that are relevant in the cluster i
+          relevant_cl <- assign_frac[, i] > 0.001
+          
+          # Computing medoid ids for cluster i
+          center_ids[i] <- medoid_dist_mat(dist_mat = dist_mat,
+                                           ids = which(relevant_cl),
+                                           w = weights)
+        }
       }
       
       # Decide centers from the ids
       centers <- coords[center_ids, ]
     }
   } else {
-    for (i in (ifelse(n_fixed > 0, n_fixed + 1, 1)):k) {
-      # Check whether euc_dist or euc_dist2 is used
-      if (d(0, 2) == 2) {
-        w_assign <- weights * assign_frac[, i]
-        
-        # If only one point belongs to the cluster, the Weiszfeld algorithm won't work
-        if (sum(w_assign > 0) == 1) {
-          centers[i,] <- coords %>%
-            slice(which(w_assign > 0)) %>%
-            unlist(., use.names = FALSE)
+    if(is.null(params)){
+      
+      for (i in (ifelse(n_fixed > 0, n_fixed + 1, 1)):k) {
+        # Check whether euc_dist or euc_dist2 is used
+        if (d(0, 2) == 2) {
+          w_assign <- weights * assign_frac[, i]
           
-        } else {
-          # Weighted median
-          weiszfeld <-
-            Gmedian::Weiszfeld(coords, weights = w_assign)$median
+          # If only one point belongs to the cluster, the Weiszfeld algorithm won't work
+          if (sum(w_assign > 0) == 1) {
+            centers[i,] <- coords %>%
+              slice(which(w_assign > 0)) %>%
+              unlist(., use.names = FALSE)
+            
+          } else {
+            # Weighted median
+            weiszfeld <-
+              Gmedian::Weiszfeld(coords, weights = w_assign)$median
+            
+          }
           
+        } else if (d(0, 2) == 4) {
+          # Weighted mean
+          centers[i,] <-
+            colSums(coords * weights * assign_frac[, i]) / sum(assign_frac[, i] * weights)
         }
-        
-      } else if (d(0, 2) == 4) {
-        # Weighted mean
-        centers[i,] <-
-          colSums(coords * weights * assign_frac[, i]) / sum(assign_frac[, i] * weights)
       }
+    } else {
+      # TODO: Tähän lokaatio parametreilla
+      
+      
+      
     }
-    
     center_ids <- NULL
   }
   
