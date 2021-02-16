@@ -226,6 +226,7 @@ allocation_step <- function(coords,
                             k,
                             centers,
                             ranges,
+                            params = NULL,
                             center_ids = NULL,
                             capacity_weights = weights,
                             lambda = NULL,
@@ -259,11 +260,28 @@ allocation_step <- function(coords,
   # Calculate the distances to centers (matrix C)
   if(is.null(dist_mat) | length(center_ids) == 0){
     
-    C <- matrix(0, ncol = k, nrow = n)
-    for(i in 1:k){
-      C[,i] <- apply(coords, MARGIN = 1, FUN = d, x2 = centers[i,])
-    }
     
+    C <- matrix(0, ncol = k, nrow = n)
+    if (is.null(params)) {
+      for (i in 1:k) {
+        C[, i] <- apply(coords,
+                        MARGIN = 1,
+                        FUN = d,
+                        x2 = centers[i, ])
+      }
+    } else {
+      
+      for (i in 1:k) {
+        centers_i <- centers[i, ]
+        params_i <- params[which((centers_i %>% pull(1)) == (coords %>% pull(1)) &
+                                   (centers_i %>% pull(2)) == (coords %>% pull(2))),]
+        
+        C[, i] <- apply(cbind(coords, params),
+                        MARGIN = 1,
+                        FUN = d,
+                        x2 = c(centers_i, params_i))
+      }
+    }
   } else {
     # Read distances from distance matrix
     C <- dist_mat[,center_ids]
@@ -309,12 +327,12 @@ allocation_step <- function(coords,
     model$rhs <- c(multip_centers,
                    rep(ranges[1, 2], k),
                    rep(ranges[1, 1], k))
-
+    
     # Model sense
     model$sense      <- c(rep('=', n), 
                           rep('<', k), 
                           rep('>', k))
-
+    
     
   } else {
     # Large number
