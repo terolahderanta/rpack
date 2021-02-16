@@ -578,6 +578,8 @@ plot_clusters(
 
 ```{r create_mobility}
 
+test_dat <- simulate_normal_mixture(n = 50, k = 5)
+
 n <- nrow(test_dat)
 
 # First form the distance matrix
@@ -591,13 +593,13 @@ dis <- sapply(1:n,
               )})
 
 # Mobility is represented via symmetric (n x n)-matrix
-#   - choose n smallest distances (n chosen to be 30) and sample approximately 10 % to have mobility
+#   - choose n smallest distances (n chosen to be 20) and sample approximately 10 % to have mobility
 #   - diagonal values are zero 
 set.seed(2)
 mob <- sapply(X = 1:n, FUN = function(x){
   # nth smallest
   #nth_smallest <- sort(dis[,x])[sample(1:8, size = 1)]
-  nth_smallest <- sort(dis[,x])[30]
+  nth_smallest <- sort(dis[,x])[20]
   rand <- runif(n)
   (dis[,x] <= nth_smallest & dis[,x] > 0 & rand < 0.05)
   })
@@ -633,28 +635,28 @@ ggplot() +
 
 ```{r clust_mobility}
 # Number of clusters
-k <- 10
+k <- 5
 
 # Mean
 pr_mean <- round(sum(test_dat$w) / k)
 
 # Cluster size width
-pr_width <- 250
+pr_width <- 200
 
 # Lower und upper limit for cluster size
 L <- pr_mean - pr_width
 U <- pr_mean + pr_width
 
 # Alternaring algorithm
-#clust_mob <- alt_alg_mob(
-#  coords = test_dat %>% select(x, y),
-#  k = k,
-#  N = 10,
-#  print_output = "steps",
-#  weights = test_dat %>% pull(w),
-#  range = c(L, U),
-#  mob = mob,
-#  lambda_mob = 1
-#)
+clust_mob <- alt_alg_mob(
+  coords = test_dat %>% select(x, y),
+  k = k,
+  N = 10,
+  print_output = "steps",
+  weights = test_dat %>% pull(w),
+  range = c(L, U),
+  mob = mob,
+  lambda_mob = 1
+)
 ```
 
