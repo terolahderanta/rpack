@@ -2,6 +2,7 @@
 #'
 #' @param coords Coordinates of the data points.
 #' @param weights Weights of the points in a vector.
+#' @param params Extra parameters for clustering.
 #' @param k Number of clusters.
 #' @param N Number of starting values.
 #' @param range Limits for the cluster size in a list.
@@ -16,16 +17,19 @@
 #' @param multip_centers Vector (n-length) defining how many centers a point is allocated to.
 #' @param dist_mat Distance matrix for all the points. 
 #' @param print_output Different types of printing outputs, "progress" is default and "steps" stepwise-print.
+#' @param lambda_fixed Lambda for releasing fixed centers.
+#' @param lambda_params Lambda for extra parameters.
 #'
 #' @return Clustering object with allocation, center locations and the value of the objective function
 #' @export
 alt_alg <- function(coords, 
                     weights, 
-                    k, 
+                    k,
+                    params = NULL,
                     N = 10, 
                     range = c(min(weights)/2, sum(weights)),
                     capacity_weights = weights, 
-                    d = euc_dist2, 
+                    d = euc_dist2,
                     center_init = "random", 
                     lambda = NULL,
                     frac_memb = FALSE, 
@@ -36,7 +40,8 @@ alt_alg <- function(coords,
                     dist_mat = NULL,
                     print_output = "progress",
                     normalization = TRUE,
-                    lambda_fixed = NULL){
+                    lambda_fixed = NULL,
+                    lambda_params = NULL){
   
   # Check arguments
   assertthat::assert_that(is.matrix(coords) || is.data.frame(coords), msg = "coords must be a matrix or a data.frame!")
@@ -66,19 +71,36 @@ alt_alg <- function(coords,
     cat(paste("Creating ", n, "x", n ," distance matrix... ", sep = ""))
     temp_mat_time <- Sys.time()
     
-    # Calculate distances with distance metric d
-    dist_mat <- apply(
-      X = coords,
-      MARGIN = 1,
-      FUN = function(x) {
-        apply(
-          X = coords,
-          MARGIN = 1,
-          FUN = d,
-          x2 = x
-        )
-      }
-    )
+    if(is.null(params)) {
+      # Calculate distances with distance metric d
+      dist_mat <- apply(
+        X = coords,
+        MARGIN = 1,
+        FUN = function(x) {
+          apply(
+            X = coords,
+            MARGIN = 1,
+            FUN = d,
+            x2 = x
+          )
+        }
+      )
+    } else {
+      # Calculate distances with distance metric d
+      dist_mat <- apply(
+        X = cbind(coords, params),
+        MARGIN = 1,
+        FUN = function(x) {
+          apply(
+            X = cbind(coords, params),
+            MARGIN = 1,
+            FUN = d,
+            x2 = x,
+            lambda = lambda_params
+          )
+        }
+      )
+    }
     
     cat(paste("Matrix created! (", format(round(Sys.time() - temp_mat_time)) ,")\n\n", sep = ""))
     
@@ -130,6 +152,7 @@ alt_alg <- function(coords,
     temp_clust <- capacitated_LA(coords = coords,
                                  weights = weights,
                                  k = k,
+                                 params = params,
                                  ranges = range,
                                  capacity_weights = capacity_weights,
                                  lambda = lambda,
@@ -173,7 +196,7 @@ alt_alg <- function(coords,
   
   # Print total iteration time
   cat(paste("Total iteration time: ", format(round(Sys.time() - temp_total_time)),"\n", sep = ""))
-
+  
   
   return(best_clust)
 }
